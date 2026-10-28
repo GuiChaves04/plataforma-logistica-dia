@@ -1,0 +1,30 @@
+# Segredos e configuração local (NUNCA publicar)
+.env
+.env.*
+!.env.example
+Backend/.secret_key
+Backend/config_local.json
+
+# Ambiente e artefatos
+venv/
+__pycache__/
+*.pyc
+logs/
+*.log
+
+# Bancos locais e dumps com dados da operação (LGPD)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+siga_*.json
+
+# Exportações e relatórios com dados da empresa
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.pptx
+*.docx
+Frontend/apresentacao_ia.html
+Backend/gerar_apresentacao_ia.py

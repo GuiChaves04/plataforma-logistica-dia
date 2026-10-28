@@ -1,0 +1,11 @@
+{
+  "supervisores": {
+    "Nome do Supervisor": {"email": "supervisor@empresa.com.br", "telefone": "+5500000000000", "compradores_ids": [1, 2, 3]}
+  },
+  "compradores": {
+    "1": "NOME DO COMPRADOR (1)"
+  },
+  "usuarios_iniciais": [
+    ["admin@empresa.com.br", "admin", "troque-esta-senha", "Administrador", "admin"]
+  ]
+}

@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta name="theme-color" content="#323063"/>
+<title>Centro de Controle | DIA DISTRIBUIÇÃO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS via CDN for rapid UI matching -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Leaflet Maps CSS -->
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .sidebar { background-color: #323063; }
+        .nav-btn.ativa { background-color: rgba(255, 255, 255, 0.1); border-radius: 0.75rem; }
+        .nav-btn:hover { background-color: rgba(255, 255, 255, 0.05); }
+
+        /* Sidebar minimizada: só ícones centralizados, seções viram divisórias */
+        .sidebar.sidebar-mini { width: 4.5rem; }
+        .sidebar-mini #sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-mini #sidebar-header > div,
+        .sidebar-mini .nav-btn span,
+        .sidebar-mini #sidebar-user-footer > div,
+        .sidebar-mini #sidebar-user-footer p,
+        .sidebar-mini #btn-logout-texto { display: none; }
+        .sidebar-mini #abas-container { padding-left: 0.625rem; padding-right: 0.625rem; overflow-x: hidden; }
+        .sidebar-mini .nav-section { font-size: 0; height: 1px; padding: 0; margin: 0.625rem 0.5rem; background-color: rgba(255, 255, 255, 0.12); }
+        .sidebar-mini .nav-btn { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+        .sidebar-mini .nav-btn i { font-size: 0.95rem; }
+        .sidebar-mini #sidebar-user-footer { display: flex; justify-content: center; padding: 0.75rem 0; }
+        .sidebar-mini #btn-logout-sidebar { width: 2.5rem; height: 2.5rem; margin: 0; justify-content: center; border-radius: 0.75rem; }
+        .sidebar-mini #btn-logout-sidebar:hover { background-color: rgba(255, 255, 255, 0.1); }
+        .conteudo-borrado { filter: blur(5px); pointer-events: none; }
+        
+        /* Modals and overrides */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; display: none; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 1rem; width: 100%; max-width: 400px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        
+        /* Map specific heights */
+        #map-telemetria { height: 100%; width: 100%; z-index: 10;}
+        
+        
+        /* Fix for Product cards in Comercial */
+        .card-texto-destaque {
+            display: block;
+            font-size: 0.85rem;
+            color: #475569;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-valor-destaque {
+            display: block;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #2A2C65;
+        }
+        .kpi-com-title h3 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        
+        [id^="kpi-com-mais-"], [id^="kpi-com-menos-"] {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        [id^="kpi-com-"] h3 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Custom scrollbar for tables */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+        /* Table Styles for modern SaaS look */
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        table thead th { 
+            background-color: #f8fafc !important; 
+            border-bottom: 2px solid #e2e8f0 !important; 
+            border-right: 1px solid #f1f5f9;
+            color: #475569 !important; 
+            font-weight: 700 !important; 
+            text-transform: uppercase; 
+            font-size: 0.7rem !important; 
+            letter-spacing: 0.05em; 
+            padding: 0.75rem 1rem !important; 
+        }
+        table thead th:last-child { border-right: none; }
+        
+        table tbody tr { transition: all 0.2s; }
+        table tbody tr:nth-child(even) { background-color: #f8fafc; }
+        table tbody tr:hover { background-color: #e2e8f0 !important; }
+        
+        table tbody td { 
+            padding: 0.75rem 1rem !important; 
+            color: #334155 !important; 
+            font-size: 0.75rem !important; 
+            border-bottom: 1px solid #e2e8f0; 
+            border-right: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+        table tbody td:last-child { border-right: none; }
+        
+        /* Filter Input Rows */
+        .linha-filtros th { padding: 0.5rem !important; background-color: #f8fafc !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .linha-filtros input { 
+            width: 100%; 
+            padding: 0.35rem 0.5rem !important; 
+            font-size: 0.75rem !important; 
+            border-radius: 0.375rem !important; 
+            border: 1px solid #cbd5e1 !important;
+        }
+
+        /* Restrição Monetária (tv.geral / tv_blurred) */
+        body.role-tv-blurred .monetary-blur,
+        body.role-tv-blurred [data-monetary="true"],
+        body.role-tv-blurred .valor-monetario {
+            filter: blur(6px) !important;
+            user-select: none !important;
+            pointer-events: none !important;
+            transition: filter 0.2s ease;
+        }
+
+        /* SVG Map Interactivity */
+        .pe-municipio-path {
+            transition: fill 0.2s ease, stroke-width 0.2s ease, stroke 0.2s ease;
+            cursor: pointer;
+        }
+        .pe-municipio-path:hover, .pe-municipio-path.foco {
+            stroke: #ffffff !important;
+            stroke-width: 2px !important;
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.7));
+        }
+        @keyframes cardFade { 
+            from { opacity: 0; transform: translateY(6px); } 
+            to { opacity: 1; transform: none; } 
+        }
+        .card-fade { 
+            animation: cardFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; 
+        }
+
+    </style>
+<link href="css/plataforma.css?v=202610231940" rel="stylesheet"/>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800">
+<!-- Sidebar -->
+<div id="sidebar-overlay" onclick="fecharMenuMobile()" aria-hidden="true"></div>
+<aside id="menu-lateral" class="w-64 sidebar text-slate-300 flex flex-col justify-between h-full shrink-0 shadow-xl z-20 transition-all duration-300 relative">
+<div>
+<div class="p-5 flex items-center gap-3 overflow-hidden" id="sidebar-header">
+<img alt="DIA" class="h-10 w-10 rounded-xl object-cover ring-1 ring-white/10 shrink-0" src="sol-dia.gif"/>
+<div>
+<h2 class="text-white font-bold text-sm tracking-wide leading-tight">Centro de Controle</h2>
+<p class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">DIA DISTRIBUIÇÃO</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="px-3 flex flex-col gap-1 mt-2 overflow-y-auto max-h-[calc(100vh-200px)]" id="abas-container">
+    <div class="nav-section px-3 pt-2 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Operação & Logística</div>
+    <button class="nav-btn aba ativa w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-dashboard">
+        <i class="fa-solid fa-gauge-high w-5 text-center text-amber-400"></i> <span>Dashboard (Visão Geral)</span>
+    </button>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-telemetria">
+        <i class="fa-solid fa-truck-fast w-5 text-center text-amber-400"></i> <span>Telemetria & Frota</span>
+    </button>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-pedidos-a-faturar">
+        <i class="fa-solid fa-clipboard-list w-5 text-center text-amber-400"></i> <span>Pedidos a Faturar</span>
+    </button>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-pedidos-consulta">
+        <i class="fa-solid fa-magnifying-glass-chart w-5 text-center text-amber-400"></i> <span>Consulta Pedidos (335)</span>
+    </button>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-devolucoes-detalhe">
+        <i class="fa-solid fa-rotate-left w-5 text-center text-amber-400"></i> <span>Devoluções & Setores</span>
+    </button>
+    <button class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-painel-tv" onclick="abrirModoTV()">
+        <i class="fa-solid fa-tv w-5 text-center text-amber-400"></i> <span>Modo TV (Painel)</span>
+    </button>
+
+    <div class="nav-section px-3 pt-3 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Estoque & Suprimentos</div>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-cortes">
+        <i class="fa-solid fa-chart-pie w-5 text-center"></i> <span>Cortes & Rupturas</span>
+    </button>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-excesso">
+        <i class="fa-solid fa-boxes-stacked w-5 text-center"></i> <span>Excesso de Estoque</span>
+    </button>
+
+    <div class="nav-section px-3 pt-3 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">Comercial</div>
+    <button class="nav-btn aba w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium text-slate-300 hover:text-white transition-colors text-left rounded-xl" id="aba-comercial">
+        <i class="fa-solid fa-tags w-5 text-center"></i> <span>Comercial & Vendas</span>
+    </button>
+</nav>
+</div>
+<div class="p-5 border-t border-white/10" id="sidebar-user-footer">
+    <div class="flex items-center gap-2">
+        <span id="user-role-badge" class="bg-amber-400/90 text-[#141a4d] text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">ADMIN</span>
+        <span id="user-nome-display" class="text-xs text-white/90 font-bold truncate">Logística DIA</span>
+    </div>
+    <p id="user-email-display" class="text-[11px] mt-1.5 truncate text-white/50" title="logistica@diadistribuicao.com.br">logistica@diadistribuicao.com.br</p>
+    <button type="button" onclick="fazerLogout()" id="btn-logout-sidebar" class="mt-3 flex items-center gap-2 text-xs font-semibold text-rose-300 hover:text-rose-200 transition-colors w-full cursor-pointer">
+        <i class="fa-solid fa-arrow-right-from-bracket shrink-0"></i> <span id="btn-logout-texto">Sair do Painel</span>
+    </button>
+</div>
+</aside>
+<!-- Main Content -->
+<div class="flex-1 flex flex-col h-screen overflow-hidden bg-[#F4F7FA]">
+<!-- Header -->
+<header id="cabecalho-pagina" class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center gap-4 shrink-0 shadow-[0_2px_10px_rgba(0,0,0,0.02)] z-10">
+<div class="flex items-center gap-3 min-w-0">
+<button type="button" id="btn-menu-mobile" onclick="abrirMenuMobile()" aria-label="Abrir menu" aria-controls="menu-lateral" aria-expanded="false" class="h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-[#141a4d] hover:bg-[#F4F7FA]">
+<i class="fa-solid fa-bars" aria-hidden="true"></i>
+</button>
+<div class="min-w-0">
+<h1 class="text-2xl font-bold tracking-tight text-[#141a4d] truncate" id="titulo-pagina">Dashboard · Visão Geral</h1>
+<p class="text-sm text-slate-500 mt-1 truncate" id="subtitulo-pagina">Faturamento e devoluções do mês direto do WinThor</p>
+</div>
+</div>
+<div class="flex gap-3 shrink-0">
+<button type="button" id="btn-compartilhar" onclick="compartilharLink(this)" title="Copiar o link da plataforma" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-[#F4F7FA] font-medium transition-colors">
+<i class="fa-solid fa-share-nodes" aria-hidden="true"></i> <span class="rotulo ml-1">Compartilhar</span>
+</button>
+</div>
+</header>
+<!-- Dynamic Content Area -->
+<main class="flex-1 overflow-y-auto p-8" id="main-content">
+<!-- Injected content goes here -->
+<div id="conteudo-cortes" class="flex flex-col gap-6 w-full max-w-full" style="display: none;">
+<section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 w-full">
+<div class="flex items-center justify-between cursor-pointer font-bold text-slate-700 text-lg border-b border-slate-100 pb-2" onclick="toggleFilter('filtros-cortes')">
+<span><i class="fa-solid fa-filter"></i> Filtros (Cortes)</span>
+<i class="fa-solid fa-chevron-down icone-seta"></i>
+</div>
+<div class="flex flex-wrap items-end gap-4 mt-4 w-full" id="filtros-cortes">
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]"><label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Data inicial</label><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="data-inicio" type="date"/></div>
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]"><label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Data final</label><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="data-fim" type="date"/></div>
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Área Responsável</label>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-area-cortes">
+<option value="LOGISTICA">Logística</option>
+<option value="COMERCIAL">Administrativo / Comercial</option>
+<option value="TODOS">Visão Geral</option>
+</select>
+</div>
+<div class="flex items-center flex-wrap gap-3 mt-4 md:mt-0 w-full md:w-auto ml-auto">
+<button class="bg-[#2A2C65] hover:bg-[#1e1f48] text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-filtrar-cortes"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Atualizar Dados</button>
+<button class="bg-white border border-slate-300 hover:bg-[#F4F7FA] text-slate-700 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-exportar-cortes"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Exportar Planilha de Cortes</button>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 w-full">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-rose-500 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Valor Perdido (Venda)</h3><p id="kpi-valor-venda" class="text-xl xl:text-2xl font-black text-rose-600 tracking-tight truncate">R$ 0,00</p><span class="text-[10px] text-slate-400 font-medium">prejuízo bruto em vendas</span></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-amber-500 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Valor Perdido (Custo)</h3><p id="kpi-valor-custo" class="text-xl xl:text-2xl font-black text-amber-600 tracking-tight truncate">R$ 0,00</p><span class="text-[10px] text-slate-400 font-medium">custo da mercadoria cortada</span></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-rose-400 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> % Cortes (Perda)</h3><p id="kpi-perc-corte" class="text-xl xl:text-2xl font-black text-rose-500 tracking-tight truncate">0%</p><span class="text-[10px] text-slate-400 font-medium">proporção sobre faturado</span></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-indigo-500 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Total SKUs Cortados</h3><p id="kpi-qtd-skus" class="text-xl xl:text-2xl font-black text-indigo-700 tracking-tight truncate">0 SKUs</p><span class="text-[10px] text-slate-400 font-medium">produtos distintos afetados</span></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-blue-500 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-box" aria-hidden="true"></i> Volume Total Cortado</h3><p id="kpi-qtd-produtos" class="text-xl xl:text-2xl font-black text-blue-700 tracking-tight truncate">0 ud.</p><span class="text-[10px] text-slate-400 font-medium">unidades físicas de itens</span></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 flex flex-col justify-between min-h-[110px] border-t-4 border-t-emerald-500 transition hover:shadow-md"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i> Faturamento Líquido</h3><p id="kpi-faturamento" class="text-xl xl:text-2xl font-black text-emerald-600 tracking-tight truncate">R$ 0,00</p><span class="text-[10px] text-slate-400 font-medium">base realizada no período</span></div>
+</section>
+<section class="comparativo-mensal-container" id="painel-comparativo-cortes">
+<div class="header-comparativo">
+<h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Análise de Situação de Corte</h3>
+<p class="legenda-datas" id="legenda-datas-comparativo">Atual: -- | Anterior: --</p>
+</div>
+<div class="overflow-x-auto w-full bg-white rounded-xl shadow-sm border border-slate-200 mt-2">
+<table class="w-full text-left text-sm text-slate-600 whitespace-nowrap">
+<thead>
+<tr>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Data</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Faturamento Líquido</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Valor Perdido (Venda)</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Valor Perdido (Custo)</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">% Cortes (Perda)</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">SKU's Cortados</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Volume Cortado</th>
+</tr>
+</thead>
+<tbody>
+<tr id="linha-comp-anterior">
+<td class="p-4 border-b border-slate-100" id="lbl-data-anterior">-</td>
+<td class="p-4 border-b border-slate-100" id="comp-ant-fat">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-ant-venda">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-ant-custo">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-ant-perc">0%</td><td class="p-4 border-b border-slate-100" id="comp-ant-skus">0</td><td class="p-4 border-b border-slate-100" id="comp-ant-vol">0</td>
+</tr>
+<tr id="linha-comp-atual">
+<td class="p-4 border-b border-slate-100" id="lbl-data-atual">-</td>
+<td class="p-4 border-b border-slate-100" id="comp-atu-fat">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-atu-venda">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-atu-custo">R$ 0,00</td><td class="p-4 border-b border-slate-100" id="comp-atu-perc">0%</td><td class="p-4 border-b border-slate-100" id="comp-atu-skus">0</td><td class="p-4 border-b border-slate-100" id="comp-atu-vol">0</td>
+</tr>
+<tr class="linha-resultado">
+<td class="p-4 border-b border-slate-100"><span class="block text-[11px] font-bold uppercase tracking-wider text-[#141a4d]">Resultado</span><span class="block text-[10px] font-medium text-slate-400 mt-0.5">atual × anterior</span></td>
+<td class="p-4 border-b border-slate-100" id="comp-res-fat">-</td><td class="p-4 border-b border-slate-100" id="comp-res-venda">-</td><td class="p-4 border-b border-slate-100" id="comp-res-custo">-</td><td class="p-4 border-b border-slate-100" id="comp-res-perc">-</td><td class="p-4 border-b border-slate-100" id="comp-res-skus">-</td><td class="p-4 border-b border-slate-100" id="comp-res-vol">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Compradores Afetados </h3><div class="chart-container"><canvas id="graficoCortesComprador"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Fornecedores Afetados</h3><div class="chart-container"><canvas id="graficoFornecedores"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Produtos Mais Cortados</h3><div class="chart-container"><canvas id="graficoProdutos"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+<h3 style="margin: 0;">Cortes por Semana</h3>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-mes-grafico" style="padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold; color: #003366; display: none;"></select>
+</div>
+<div class="chart-container"><canvas id="graficoCortesSemana"></canvas></div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Clientes Mais Afetados Financeiramente</h3><div class="chart-container"><canvas id="graficoClientes"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Motivos do Corte Registados</h3><div class="motivos-container" id="listaMotivos"><p>Aguardando dados...</p></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 5 Conferentes (Harpia)</h3><div class="chart-container"><canvas id="graficoConferentes"></canvas></div></div>
+</section>
+<section class="mt-8">
+<h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-clipboard-list mr-2"></i>Auditoria Estrutural - Todos os Produtos Cortados no Período</h3>
+<div class="overflow-x-auto w-full bg-white rounded-xl shadow-sm border border-slate-200">
+<table class="w-full text-left text-sm text-slate-600 whitespace-nowrap" id="tabela-top100">
+<thead>
+<tr>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Carreg.</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Comprador</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Cliente</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Fornecedor</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Produto</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Qtd Cortada</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Ped. Cortados</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Valor Perdido</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Data Corte</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Conferente</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Motivo do Corte</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Estoque Atual</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Estoque na Data</th>
+</tr>
+<tr class="linha-filtros">
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="0" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="1" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="2" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="3" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="4" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</section>
+</div>
+<div id="conteudo-excesso" class="flex flex-col gap-6 w-full max-w-full" style="display: none;">
+<section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 w-full">
+<div class="flex items-center justify-between cursor-pointer font-bold text-slate-700 text-lg border-b border-slate-100 pb-2" onclick="toggleFilter('filtros-excesso')">
+<span><i class="fa-solid fa-filter"></i> Filtros (Excesso)</span>
+<i class="fa-solid fa-chevron-down icone-seta"></i>
+</div>
+<div class="flex flex-wrap items-end gap-4 mt-4 w-full" id="filtros-excesso">
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Filtrar por Comprador</label>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-comprador">
+<option value="TODOS">Todos os Compradores</option>
+</select>
+</div>
+<div class="flex items-center flex-wrap gap-3 mt-4 md:mt-0 w-full md:w-auto ml-auto">
+<button class="bg-[#2A2C65] hover:bg-[#1e1f48] text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-filtrar-excesso"><i class="fa-solid fa-box" aria-hidden="true"></i> Atualizar Dashboard</button>
+<button class="bg-white border border-slate-300 hover:bg-[#F4F7FA] text-slate-700 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-exportar-excesso"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Excesso</button>
+<button class="bg-slate-500 hover:bg-slate-600 border border-slate-500 text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-exportar-isv"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> ISV (&gt;45d)</button>
+<button class="bg-[#D40000] hover:bg-[#b00000] border border-[#D40000] text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-exportar-ruptura"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Ruptura</button>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between border-t-4 border-t-emerald-500 hover:shadow-md transition">
+    <div class="flex items-center justify-between">
+        <h4 class="text-xs font-bold text-slate-500 tracking-wider uppercase"><i class="fa-solid fa-money-bill" aria-hidden="true"></i> Estoque Líquido Pago (Capital Livre)</h4>
+        <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full">Disponível</span>
+    </div>
+    <p id="kpi-estoque-pago" class="text-2xl xl:text-3xl font-black text-slate-800 tracking-tight my-2 truncate">R$ 0,00</p>
+    <small class="text-xs text-slate-400 font-medium">Ativo Saneado menos Contas a Pagar</small>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between border-t-4 border-t-slate-400 hover:shadow-md transition">
+    <div class="flex items-center justify-between">
+        <h4 class="text-xs font-bold text-slate-500 tracking-wider uppercase"><i class="fa-solid fa-receipt" aria-hidden="true"></i> Contas a Pagar (3 Meses Fechados)</h4>
+        <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">Passivo</span>
+    </div>
+    <p id="kpi-contas-pagar" class="text-2xl xl:text-3xl font-black text-slate-800 tracking-tight my-2 truncate">R$ 0,00</p>
+    <small class="text-xs text-slate-400 font-medium">Títulos abertos não cancelados</small>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between border-t-4 border-t-rose-500 hover:shadow-md transition">
+    <div class="flex items-center justify-between">
+        <h4 class="text-xs font-bold text-slate-500 tracking-wider uppercase"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Perda Comercial Estimada (Ruptura)</h4>
+        <span class="text-xs bg-rose-50 text-rose-700 font-bold px-2 py-0.5 rounded-full">Prejuízo</span>
+    </div>
+    <p id="kpi-perda-venda" class="text-2xl xl:text-3xl font-black text-rose-600 tracking-tight my-2 truncate">R$ 0,00</p>
+    <small class="text-xs text-slate-400 font-medium">Prejuízo mensal projetado de SKUs zerados</small>
+</div>
+</section>
+<section class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-3 w-full">
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-blue-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i> Ativo Compras</h3><p id="kpi-valor-estoque" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-indigo-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Limite Ideal</h3><p id="kpi-limite-seguranca" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-amber-500 cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" role="button" tabindex="0" data-tabela-estoque="excesso" title="Ver a tabela de produtos em excesso"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Cap. em Excesso</h3><p id="kpi-valor-excesso" class="text-base font-extrabold text-amber-600 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-emerald-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-money-bill" aria-hidden="true"></i> Ativo Venda Est.</h3><p id="kpi-valor-venda-est" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-teal-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Oportunidade (R$)</h3><p id="kpi-oportunidade-valor" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-slate-400 cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" role="button" tabindex="0" data-tabela-estoque="obsoletos" title="Ver a tabela de produtos obsoletos"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Obsoletos (&gt;45d)</h3><p id="kpi-qtd-obsoletos" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0 SKUs</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-slate-500 cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" role="button" tabindex="0" data-tabela-estoque="obsoletos" title="Ver a tabela de produtos obsoletos"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i> Valor Obsoletos</h3><p id="kpi-valor-obsoletos" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-rose-500 cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" role="button" tabindex="0" data-tabela-estoque="ruptura" title="Ver a tabela de SKUs em ruptura"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> SKUs em Ruptura</h3><p id="kpi-skus-zerados" class="text-base font-extrabold text-rose-600 tracking-tight truncate">0 SKUs</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-blue-400"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Venda Mensal</h3><p id="kpi-media-venda" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-purple-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Custo Fin. (1.5%)</h3><p id="kpi-custo-fin-excesso" class="text-base font-extrabold text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-cyan-500"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Markup</h3><p id="kpi-fator-margem" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0,00%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-rose-400" title="Quanto falta, em R$ a preço de custo, para chegar ao estoque ideal de 60 dias, dividido pelo valor desse estoque ideal."><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Quebra em R$ (% do ideal em falta)</h3><p id="kpi-indice-ruptura-valor" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0,00%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-rose-300" title="Parte dos SKUs ativos que está com estoque zerado."><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Quebra em SKUs (% do mix zerado)</h3><p id="kpi-indice-ruptura-qtd" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0,00%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-amber-400"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Índice Obsoletos</h3><p id="kpi-indice-45d" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0,00%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-teal-400"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-bullseye" aria-hidden="true"></i> Oportunidades</h3><p id="kpi-oportunidade-compra" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0 SKUs</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-3.5 flex flex-col justify-between min-h-[90px] border-t-4 border-t-slate-400"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase"><i class="fa-solid fa-box" aria-hidden="true"></i> SKUs Ativos</h3><p id="kpi-itens-estoque" class="text-base font-extrabold text-slate-800 tracking-tight truncate">0</p></div>
+</section>
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col lg:col-span-2"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Limite Ideal vs Excesso Real (Em R$) <span class="normal-case font-medium text-slate-400">· escala logarítmica: cada faixa da grade vale 10× a anterior</span></h3><div class="chart-container"><canvas id="graficoLimiteExcesso"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col lg:col-span-2"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Status de Cobertura e Alertas de Giro por SKU</h3><div class="chart-container"><canvas id="graficoAlertas"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 SKUs com Ruptura (Perda Est.)</h3><div class="chart-container"><canvas id="graficoProdutosRuptura"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 SKUs Obsoletos (Dias Sem Venda)</h3><div class="chart-container"><canvas id="graficoProdutosObsoletos"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Fornecedores em Excesso</h3><div class="chart-container"><canvas id="graficoFornecedoresExcesso"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 SKUs em Excesso</h3><div class="chart-container"><canvas id="graficoProdutosExcesso"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 SKUs por Ativo Total</h3><div class="chart-container"><canvas id="graficoProdutosEstoque"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Fornecedores Faltantes</h3><div class="chart-container"><canvas id="graficoFornecedoresFaltante"></canvas></div></div>
+</section>
+<section id="excesso-tabela-detalhe" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex-col gap-4 scroll-mt-4">
+    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
+        <div>
+            <h3 class="text-sm font-bold text-[#141a4d] uppercase tracking-wider" id="excesso-tabela-titulo">Tabela</h3>
+            <p class="text-xs text-slate-500 mt-0.5" id="excesso-tabela-resumo"></p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <select id="excesso-tabela-situacao" class="hidden text-xs p-2 border border-slate-200 rounded-lg bg-white" onchange="renderizarTabelaEstoque()"></select>
+            <input type="search" id="excesso-tabela-busca" placeholder="Buscar produto, fornecedor ou comprador" oninput="renderizarTabelaEstoque()" class="text-xs p-2 border border-slate-200 rounded-lg w-64 max-w-full">
+            <button type="button" id="excesso-tabela-baixar" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 transition"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Baixar planilha</button>
+            <button type="button" onclick="fecharTabelaEstoque()" aria-label="Fechar tabela" class="h-8 w-8 rounded-lg text-slate-500 hover:bg-slate-100 transition"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+    </div>
+    <div class="overflow-auto max-h-[600px] rounded-xl border border-slate-200">
+        <table class="w-full text-left text-sm whitespace-nowrap" id="excesso-tabela">
+            <thead class="sticky top-0 z-10"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <p class="text-xs text-slate-400" id="excesso-tabela-rodape"></p>
+</section>
+</div>
+<div id="conteudo-comercial" class="flex flex-col gap-6 w-full max-w-full" style="display: none;">
+<section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 w-full">
+<div class="flex items-center justify-between cursor-pointer font-bold text-slate-700 text-lg border-b border-slate-100 pb-2" onclick="toggleFilter('filtros-comercial')">
+<span><i class="fa-solid fa-filter"></i> Filtros (Comercial)</span>
+<i class="fa-solid fa-chevron-down icone-seta"></i>
+</div>
+<div class="flex flex-wrap items-end gap-4 mt-4 w-full" id="filtros-comercial">
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]"><label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Data inicial</label><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="data-inicio-comercial" type="date"/></div>
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]"><label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Data final</label><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="data-fim-comercial" type="date"/></div>
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Comprador</label>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-comprador-comercial">
+<option value="TODOS">Todos os Compradores</option>
+</select>
+</div>
+<div class="flex flex-col gap-1 w-full md:w-auto flex-1 max-w-[240px]">
+<label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Supervisor</label>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-supervisor-comercial"><option value="TODOS">Todos os Supervisores</option></select>
+</div>
+<div class="flex items-center flex-wrap gap-3 mt-4 md:mt-0 w-full md:w-auto ml-auto">
+<button class="bg-[#2A2C65] hover:bg-[#1e1f48] text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-filtrar-comercial"><i class="fa-solid fa-chart-column" aria-hidden="true"></i> Analisar Desempenho</button>
+<button class="bg-white border border-slate-300 hover:bg-[#F4F7FA] text-slate-700 font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center gap-2 text-sm shadow-sm" id="btn-exportar-comercial"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Exportar Planilha BI</button>
+</div>
+</div>
+</section>
+<div class="insights-panel" id="painel-insights"></div>
+<section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 w-full">
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-emerald-500 hover:shadow-md transition"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Faturamento (Geral)</h3><p id="kpi-com-fat-total" class="text-lg font-black text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-blue-500 hover:shadow-md transition"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Fat. Comprador</h3><p id="kpi-com-fat-comp" class="text-lg font-black text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-indigo-500 hover:shadow-md transition"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Fat. Supervisor</h3><p id="kpi-com-fat-sup" class="text-lg font-black text-slate-800 tracking-tight truncate">R$ 0,00</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-amber-500 hover:shadow-md transition"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase">% Sup. Geral</h3><p id="kpi-com-perc-total" class="text-lg font-black text-amber-600 tracking-tight truncate">0%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-teal-500 hover:shadow-md transition"><h3 class="text-[10px] font-bold text-slate-500 tracking-wider mb-1 uppercase">% Sup. Comprador</h3><p id="kpi-com-perc-comp" class="text-lg font-black text-teal-600 tracking-tight truncate">0%</p></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-emerald-600 hover:shadow-md transition"><div id="kpi-com-mais-vendido"></div></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-rose-500 hover:shadow-md transition"><div id="kpi-com-menos-vendido"></div></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-blue-600 hover:shadow-md transition"><div id="kpi-com-mais-rentavel"></div></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-cyan-600 hover:shadow-md transition"><div id="kpi-com-mais-positivou"></div></div>
+<div class="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 flex flex-col justify-between min-h-[95px] border-t-4 border-t-purple-600 hover:shadow-md transition"><div id="kpi-com-consistente"></div></div>
+</section>
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col lg:col-span-2">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+<h3 class="text-[11px] font-bold text-slate-500 tracking-wider uppercase">Cadência Operacional: Pedidos Emitidos por Semana</h3>
+<select class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" id="filtro-mes-grafico-comercial" style="padding: 4px; border-radius: 4px; border: 1px solid #cbd5e1; font-weight: bold; color: #003366; display: none;"></select>
+</div>
+<div class="chart-container"><canvas id="graficoComPedidosSemana"></canvas></div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Produtos por Faturamento</h3><div class="chart-container"><canvas id="graficoComFatProduto"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Produtos Mais Rentáveis (Lucro)</h3><div class="chart-container"><canvas id="graficoComMaisRentaveis"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Clientes por Faturamento</h3><div class="chart-container"><canvas id="graficoComFatCliente"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Fornecedores por Faturamento</h3><div class="chart-container"><canvas id="graficoComFatFornecedor"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Entidades por NF-es Emitidas (Volume)</h3><div class="chart-container"><canvas id="graficoComNotasCliente"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Mais Consistentes (Menor CV)</h3><div class="chart-container"><canvas id="graficoComConsistentes"></canvas></div></div>
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col"><h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Top 10 Positivação de Produtos (Qtd Clientes)</h3><div class="chart-container"><canvas id="graficoComPositivacao"></canvas></div></div>
+</section>
+<section class="mt-8">
+<h3 class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Desempenho Analítico - Todos os Produtos</h3>
+<div class="overflow-x-auto w-full bg-white rounded-xl shadow-sm border border-slate-200">
+<table class="w-full text-left text-sm text-slate-600 whitespace-nowrap" id="tabela-comercial">
+<thead>
+<tr>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Código</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Descrição</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Embalagem</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Fornecedor</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Comprador</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Supervisor (Maior Venda)</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Faturamento R$</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Lucro R$</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Positivação</th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Média Dia (Qtd)</th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200">Média Semana (Qtd)</th>
+</tr>
+<tr class="linha-filtros">
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="0" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="1" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="2" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="3" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="4" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"><input class="w-full p-2.5 border border-slate-300 rounded-lg text-sm text-slate-800 bg-[#F4F7FA] focus:bg-white focus:border-[#FFD100] focus:ring-2 focus:ring-[#FFD100]/50 outline-none transition-all" data-col="5" placeholder="..." type="text"/></th>
+<th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th><th class="bg-[#F4F7FA] p-4 font-semibold text-slate-700 border-b border-slate-200"></th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</section>
+</div>
+<!-- Nova Aba Telemetria e Frota -->
+<div class="flex flex-col gap-6" id="conteudo-telemetria" style="display: none;">
+
+  <!-- Filtros Motorista -->
+  <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+      <div class="flex items-center justify-between cursor-pointer font-bold text-[#2A2C65] text-lg border-b border-slate-100 pb-2">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-id-card-clip text-slate-400"></i> Filtros de Análise do Motorista</span>
+          
+      </div>
+      <div class="flex flex-wrap items-end gap-4 mt-4 w-full" id="filtros-telemetria">
+          <div class="flex-1 min-w-[250px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Período (Data)</label>
+              <div class="flex items-center gap-2">
+                  <input type="date" id="data-inicio-telemetria" class="w-full p-2 border border-slate-300 rounded-lg text-sm text-slate-800 bg-slate-50 focus:bg-white focus:border-[#FFD100] outline-none">
+                  <span class="text-xs font-bold text-slate-400">até</span>
+                  <input type="date" id="data-fim-telemetria" class="w-full p-2 border border-slate-300 rounded-lg text-sm text-slate-800 bg-slate-50 focus:bg-white focus:border-[#FFD100] outline-none">
+              </div>
+          </div>
+          <div class="flex-1 min-w-[200px]">
+              <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Motorista</label>
+                  <select id="filtro-motorista-analise" class="w-full p-2 border border-slate-300 rounded-lg text-sm text-slate-800 bg-slate-50 focus:bg-white focus:border-[#FFD100] outline-none">
+                      <option value="TODOS">Visão Geral (Todos)</option>
+                  </select>
+          </div>
+          <div class="flex items-center flex-wrap gap-3 w-full md:w-auto">
+              <button class="bg-[#2A2C65] hover:bg-[#1e1f48] text-white font-medium py-2 px-4 rounded-xl transition-colors text-sm shadow-sm" id="btn-filtrar-motorista"><i class="fa-solid fa-search"></i> Analisar</button>
+          </div>
+      </div>
+  </section>
+
+  <!-- KPIs de Entregas e Faltas -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-4">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-green-500">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Entregas Realizadas</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-entregas-qtd">0</div>
+              <div class="bg-green-50 text-green-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-entregas-pct">0% de sucesso</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-[#FFD100]">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Devoluções (Qtd)</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-qtd-devolucoes">0</div>
+              <div class="bg-yellow-50 text-yellow-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-pct-devolucoes">0% das entregas</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-indigo-500" title="Clientes distintos com nota fiscal de venda (VP/VV) emitida no período, filiais 1 e 11, sem canceladas. Mesma regra da rotina 111 do WinThor.">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Clientes Positivados</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-clientes-atendidos">0</div>
+              <div class="bg-indigo-50 text-indigo-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-sub-clientes-atendidos">mesma regra da rotina 111</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-purple-500" title="Clientes únicos que registraram devolução no período">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Clientes que Devolveram</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-clientes-devolveram">0</div>
+              <div class="bg-purple-50 text-purple-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-pct-clientes-devolveram">0% dos clientes</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-red-500">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Gasto Diesel (estimado)</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-combustivel">R$ 0,00</div>
+              <div class="bg-orange-50 text-orange-600 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-pct-combustivel">0% do faturamento</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-blue-500">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">KM Rodados (Siga+)</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-km-rodados">0 km</div>
+              <div class="bg-blue-50 text-blue-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-sub-km-rodados">Telemetria Siga+</div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Gráficos de Devolução (Valor e Peso) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+      <!-- Gráfico Valor -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex flex-wrap justify-between items-center mb-4 border-b border-slate-100 pb-2 gap-2">
+              <h3 class="text-xs font-bold text-[#2A2C65] tracking-wider uppercase">Devolução (Valor R$)</h3>
+              <div class="flex items-center gap-2">
+                  <div class="flex bg-slate-100 p-0.5 rounded-md text-[10px] font-bold">
+                      <button id="btn-toggle-val-origem-fat" class="px-2 py-1 bg-white text-[#2A2C65] rounded shadow-sm transition-all" onclick="toggleChartOrigem('valor', 'fat')">Dia Faturado</button>
+                      <button id="btn-toggle-val-origem-mov" class="px-2 py-1 text-slate-500 hover:text-slate-700 transition-all" onclick="toggleChartOrigem('valor', 'mov')">Entrada Dev.</button>
+                  </div>
+                  <div class="flex bg-slate-100 p-0.5 rounded-md text-[10px] font-bold">
+                      <button id="btn-toggle-val-num" class="px-2 py-1 bg-white text-[#2A2C65] rounded shadow-sm transition-all" onclick="toggleChartType('valor', 'num')">Numérico</button>
+                      <button id="btn-toggle-val-pct" class="px-2 py-1 text-slate-500 hover:text-slate-700 transition-all" onclick="toggleChartType('valor', 'pct')">Porcentagem</button>
+                  </div>
+              </div>
+          </div>
+          <div class="relative h-[200px] w-full">
+              <canvas id="chart-devolucao-valor"></canvas>
+          </div>
+      </div>
+      <!-- Gráfico Peso -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <div class="flex flex-wrap justify-between items-center mb-4 border-b border-slate-100 pb-2 gap-2">
+              <h3 class="text-xs font-bold text-[#2A2C65] tracking-wider uppercase">Devolução (Peso Kg)</h3>
+              <div class="flex items-center gap-2">
+                  <div class="flex bg-slate-100 p-0.5 rounded-md text-[10px] font-bold">
+                      <button id="btn-toggle-peso-origem-fat" class="px-2 py-1 bg-white text-[#2A2C65] rounded shadow-sm transition-all" onclick="toggleChartOrigem('peso', 'fat')">Dia Faturado</button>
+                      <button id="btn-toggle-peso-origem-mov" class="px-2 py-1 text-slate-500 hover:text-slate-700 transition-all" onclick="toggleChartOrigem('peso', 'mov')">Entrada Dev.</button>
+                  </div>
+                  <div class="flex bg-slate-100 p-0.5 rounded-md text-[10px] font-bold">
+                      <button id="btn-toggle-peso-num" class="px-2 py-1 bg-white text-[#2A2C65] rounded shadow-sm transition-all" onclick="toggleChartType('peso', 'num')">Numérico</button>
+                      <button id="btn-toggle-peso-pct" class="px-2 py-1 text-slate-500 hover:text-slate-700 transition-all" onclick="toggleChartType('peso', 'pct')">Porcentagem</button>
+                  </div>
+              </div>
+          </div>
+          <div class="relative h-[200px] w-full">
+              <canvas id="chart-devolucao-peso"></canvas>
+          </div>
+      </div>
+  </div>
+
+  
+    <!-- Frota Siga+ Chart -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mt-4 flex flex-col">
+        <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase border-b border-slate-100 pb-2 mb-2"><i class="fa-solid fa-truck-fast mr-2"></i>Frota (Siga+) - KM Rodados por Veículo</h3>
+        <div class="text-[11px] text-slate-500 mb-2" id="frota-siga-status"></div>
+        <div class="chart-container relative h-[300px] w-full">
+            <canvas id="graficoFrotaSiga"></canvas>
+            <p id="frota-siga-vazio" class="hidden absolute inset-0 flex items-center justify-center text-sm text-slate-400">Nenhum veículo com km no Siga+ para este filtro.</p>
+        </div>
+    </div>
+
+    <!-- Gasto de diesel por tipo de veículo -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mt-4 flex flex-col">
+        <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase border-b border-slate-100 pb-2 mb-2"><i class="fa-solid fa-gas-pump mr-2" aria-hidden="true"></i>Gasto de Diesel por Tipo de Veículo (estimado)</h3>
+        <div class="text-[11px] text-slate-500 mb-2" id="gasto-tipo-status"></div>
+        <div class="chart-container relative h-[300px] w-full">
+            <canvas id="graficoGastoTipo"></canvas>
+            <p id="gasto-tipo-vazio" class="hidden absolute inset-0 flex items-center justify-center text-sm text-slate-400">Sem gasto estimado para este filtro.</p>
+        </div>
+    </div>
+
+    <!-- Novo Mapa Coroplético -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col w-full mt-4">
+      <div class="flex flex-wrap items-center justify-between mb-4 gap-3 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-3">
+            <h3 class="text-sm font-bold text-[#2A2C65] tracking-wider uppercase">Mapa de Devolução por Cidade</h3>
+            <span class="text-[11px] text-slate-400">clique numa cidade para ver as devoluções dela</span>
+            <div class="flex bg-slate-100 p-1 rounded-lg">
+                <button id="btn-metrica-val" onclick="alterarMetricaMapa('valor')" class="px-3 py-1 text-xs font-bold rounded-md bg-[#2A2C65] shadow-sm text-white transition-all">Valor R$</button>
+                <button id="btn-metrica-pct" onclick="alterarMetricaMapa('taxa')" class="px-3 py-1 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition-all">Taxa %</button>
+            </div>
+          </div>
+          <div class="flex bg-slate-100 p-1 rounded-lg">
+              <button id="btn-visao-pe" onclick="alterarVisaoMapa('PE')" class="px-3 py-1 text-xs font-bold rounded-md bg-white shadow-sm text-[#2A2C65] transition-all">Pernambuco</button>
+              <button id="btn-visao-rmr" onclick="alterarVisaoMapa('RMR')" class="px-3 py-1 text-xs font-bold rounded-md text-slate-500 hover:text-slate-700 transition-all">RMR</button>
+          </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
+          <div class="relative w-full h-[350px] bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden border border-slate-100" id="mapa-svg-container">
+              <!-- SVG Renderizado via JS -->
+              <p class="text-sm text-slate-400">Carregando mapa geográfico...</p>
+              <div id="mapa-tooltip" class="pointer-events-none absolute left-3 top-3 rounded-lg bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 hidden z-10">
+                  <div class="font-semibold text-[#141a4d]" id="tooltip-cidade">Cidade</div>
+                  <div class="tabular-nums text-slate-600" id="tooltip-dados">devolvido R$ 0,00 · taxa 0%</div>
+                  <div class="tabular-nums text-slate-400" id="tooltip-faturado">faturado R$ 0,00</div>
+              </div>
+          </div>
+          <div class="flex flex-col h-[350px]">
+              <h4 class="text-xs font-bold text-[#2A2C65] uppercase tracking-wider mb-2" id="titulo-ranking-mapa">Maiores Volumes (R$)</h4>
+              <div class="overflow-y-auto flex-1 pr-2">
+                  <ul class="divide-y divide-slate-100" id="lista-cidades-ranking">
+                  </ul>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Tabela de Rotas -->
+  <section class="mt-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <h3 class="text-[11px] font-bold text-slate-500 tracking-wider uppercase"><i class="fa-solid fa-road-circle-exclamation mr-2 text-rose-500"></i> Rotas do motorista que mais geraram devolução</h3>
+          <span class="text-xs text-slate-500 font-medium" id="rotas-contador">Exibindo rotas com devolução</span>
+      </div>
+      <div class="overflow-x-auto w-full bg-white rounded-xl shadow-sm border border-slate-200 mt-2">
+          <table class="w-full text-left text-sm text-slate-600 whitespace-nowrap" id="tabela-rotas-devolucao">
+              <thead>
+                  <tr class="bg-[#F4F7FA] border-b border-slate-200">
+                      <th class="p-3 font-semibold text-slate-700">Rota / Destino</th>
+                      <th class="p-3 font-semibold text-slate-700">Motorista</th>
+                      <th class="p-3 font-semibold text-slate-700">Cargas Concluídas</th>
+                      <th class="p-3 font-semibold text-slate-700">Peso Faturado (Kg)</th>
+                      <th class="p-3 font-semibold text-slate-700">Valor Faturado (R$)</th>
+                      <th class="p-3 font-semibold text-red-600">Devolvido (R$)</th>
+                      <th class="p-3 font-semibold text-red-600">Taxa Dev. (%)</th>
+                  </tr>
+                  <tr class="bg-slate-50 border-b border-slate-200">
+                      <th class="p-2">
+                          <select id="filtro-tabela-rota" class="w-full p-2 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:border-[#FFD100] outline-none">
+                              <option value="TODAS">Todas as Rotas</option>
+                          </select>
+                      </th>
+                      <th class="p-2">
+                          <select id="filtro-tabela-motorista" class="w-full p-2 border border-slate-300 rounded-lg text-xs text-slate-800 bg-white focus:border-[#FFD100] outline-none">
+                              <option value="TODOS">Todos os Motoristas</option>
+                          </select>
+                      </th>
+                      <th class="p-2"></th>
+                      <th class="p-2"></th>
+                      <th class="p-2"></th>
+                      <th class="p-2"></th>
+                      <th class="p-2"></th>
+                  </tr>
+              </thead>
+              <tbody id="tbody-rotas-devolucao" class="divide-y divide-slate-100">
+              </tbody>
+          </table>
+      </div>
+  </section>
+
+</div>
+
+<!-- ===================================================================== -->
+<!-- ABA: PEDIDOS A FATURAR -->
+<!-- ===================================================================== -->
+<div id="conteudo-pedidos-a-faturar" class="flex flex-col gap-5" style="display: none;">
+    <!-- Top Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+            <h2 class="text-lg font-black text-[#141a4d] flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-list text-amber-500"></i> Pedidos a Faturar
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pedidos liberados (L) e montados (M) sem faturamento nos últimos 30 dias</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span class="text-xs text-slate-400 font-medium" id="faturar-atualizado-em">Aguardando atualização...</span>
+            <button onclick="carregarPedidosAFaturar()" class="px-3.5 py-2 bg-[#141a4d] hover:bg-[#1b2168] text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-2">
+                <i class="fa-solid fa-arrows-rotate"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pedidos Parados</span>
+            <div class="text-2xl font-black text-slate-900 mt-1" id="kpi-faturar-pedidos">0</div>
+            <div class="text-[11px] text-slate-400 mt-1">Status Liberado (L) e Montado (M)</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Valor Acumulado</span>
+            <div class="text-2xl font-black text-blue-700 mt-1" id="kpi-faturar-valor">R$ 0,00</div>
+            <div class="text-[11px] text-slate-400 mt-1">Valor faturável pendente</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Peso Total</span>
+            <div class="text-2xl font-black text-slate-800 mt-1" id="kpi-faturar-peso">0 kg</div>
+            <div class="text-[11px] text-slate-400 mt-1">Carga física a expedir</div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-red-500">
+            <span class="text-[11px] font-bold text-red-600 uppercase tracking-wider">Reentregas</span>
+            <div class="text-2xl font-black text-red-600 mt-1" id="kpi-faturar-reentregas">0</div>
+            <div class="text-[11px] text-slate-400 mt-1">Pedidos voltados com nova tentativa</div>
+        </div>
+    </div>
+
+    <!-- Filtros de Busca -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 block mb-1">Buscar Cliente ou Pedido</label>
+            <input type="text" id="filtro-faturar-busca" oninput="aplicarFiltrosFaturar()" placeholder="Ex: Atacadão ou 457018..." class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+        </div>
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 block mb-1">Status WinThor</label>
+            <select id="filtro-faturar-status" onchange="aplicarFiltrosFaturar()" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d] bg-white">
+                <option value="">Todos os Status (L e M)</option>
+                <option value="L">Somente Liberados (L)</option>
+                <option value="M">Somente Montados (M)</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 block mb-1">Vendedor (RCA)</label>
+            <select id="filtro-faturar-rca" onchange="aplicarFiltrosFaturar()" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d] bg-white">
+                <option value="">Todos os Vendedores</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 block mb-1">Cidade</label>
+            <select id="filtro-faturar-cidade" onchange="aplicarFiltrosFaturar()" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d] bg-white">
+                <option value="">Todas as Cidades</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table class="w-full text-xs text-left whitespace-nowrap">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200 cursor-pointer">
+                <tr>
+                    <th class="p-3" onclick="ordenarFaturar('numero_pedido')">Pedido <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3" onclick="ordenarFaturar('nome_cliente')">Cliente <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3" onclick="ordenarFaturar('cidade_cliente')">Cidade/UF <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3" onclick="ordenarFaturar('nome_rca')">Vendedor (RCA) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3">Supervisor</th>
+                    <th class="p-3 text-right" onclick="ordenarFaturar('valor_pedido')">Valor (R$) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3 text-right" onclick="ordenarFaturar('peso_pedido')">Peso (Kg) <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3 text-right" onclick="ordenarFaturar('horas_parado')">Tempo Parado <i class="fa-solid fa-sort ml-1 text-slate-400"></i></th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 text-center">Reentrega</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-pedidos-a-faturar" class="divide-y divide-slate-100">
+                <tr><td colspan="10" class="text-center py-8 text-slate-400">Clique na aba para carregar os dados ao vivo.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ABA: CONSULTA DE PEDIDOS (335 TURBINADA) -->
+<!-- ===================================================================== -->
+<div id="conteudo-pedidos-consulta" class="flex flex-col gap-5" style="display: none;">
+    <!-- Top Bar -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+        <div>
+            <h2 class="text-lg font-black text-[#141a4d] flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass-chart text-amber-500"></i> Consulta de Pedidos (Rotina 335)
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Pesquisa avançada · Filiais 1 e 11 · Visualização de itens e DANFE oficial</p>
+        </div>
+    </div>
+
+    <!-- Filtros de Consulta -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col gap-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nº do Pedido</label>
+                <input type="number" id="filtro-335-numped" placeholder="Ex: 2651001011" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nº Nota Fiscal (NF)</label>
+                <input type="number" id="filtro-335-nf" placeholder="Ex: 176398" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Nº Carregamento</label>
+                <input type="number" id="filtro-335-numcar" placeholder="Ex: 12540" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Cód. Cliente</label>
+                <input type="number" id="filtro-335-cliente" placeholder="Ex: 39493" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Cód. RCA (Vendedor)</label>
+                <input type="number" id="filtro-335-rca" placeholder="Ex: 120" class="w-full text-xs p-2.5 border border-slate-200 rounded-lg outline-none focus:border-[#141a4d]">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-100">
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Data Emissão De</label>
+                <input type="date" id="filtro-335-ini" class="w-full text-xs p-2 border border-slate-200 rounded-lg outline-none">
+            </div>
+            <div>
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Até</label>
+                <input type="date" id="filtro-335-fim" class="w-full text-xs p-2 border border-slate-200 rounded-lg outline-none">
+            </div>
+            <div class="col-span-1 sm:col-span-2">
+                <label class="text-[11px] font-bold text-slate-600 block mb-1">Posições / Estados</label>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="L" checked class="accent-[#141a4d]"> Liberado (L)
+                    </label>
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="M" checked class="accent-[#141a4d]"> Montado (M)
+                    </label>
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="F" checked class="accent-[#141a4d]"> Faturado (F)
+                    </label>
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="P" class="accent-[#141a4d]"> Pendente (P)
+                    </label>
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="B" class="accent-[#141a4d]"> Bloqueado (B)
+                    </label>
+                    <label class="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200 cursor-pointer">
+                        <input type="checkbox" name="filtro-335-status" value="C" class="accent-[#141a4d]"> Cancelado (C)
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <button onclick="executarConsulta335()" class="px-6 py-2.5 bg-[#141a4d] hover:bg-[#1b2168] text-white rounded-xl text-xs font-bold transition shadow-md flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass"></i> Consultar
+            </button>
+            <button onclick="document.querySelectorAll('#conteudo-pedidos-consulta input[type=number]').forEach(i=>i.value=''); executarConsulta335();" class="text-xs text-amber-600 hover:text-amber-700 font-semibold">
+                Limpar Identificadores
+            </button>
+            <span class="text-[11px] text-slate-400 ml-auto hidden md:inline">Nº do pedido, NF ou Carga encontram em qualquer data sem restrição de período.</span>
+        </div>
+    </div>
+
+    <!-- Tabela de Resultados da Consulta -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table class="w-full text-xs text-left whitespace-nowrap">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
+                <tr>
+                    <th class="p-3">Pedido</th>
+                    <th class="p-3">Data</th>
+                    <th class="p-3 text-center">Dias</th>
+                    <th class="p-3">Cliente</th>
+                    <th class="p-3">RCA</th>
+                    <th class="p-3">Posição</th>
+                    <th class="p-3">Carga</th>
+                    <th class="p-3">Motorista</th>
+                    <th class="p-3 text-right">Valor Total</th>
+                    <th class="p-3 text-right">Peso</th>
+                    <th class="p-3 text-center">DANFE</th>
+                    <th class="p-3 text-center">Devolução</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-pedidos-consulta" class="divide-y divide-slate-100">
+                <tr><td colspan="12" class="text-center py-10 text-slate-400">Preencha os filtros acima e clique em <b>Consultar</b> para pesquisar pedidos.</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ABA: DEVOLUÇÕES & SETORES -->
+<!-- ===================================================================== -->
+<div id="conteudo-devolucoes-detalhe" class="flex flex-col gap-5" style="display: none;">
+    <!-- Top Bar -->
+    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+        <div>
+            <h2 class="text-lg font-black text-[#141a4d] flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left text-amber-500"></i> Devoluções & Setores Responsáveis
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Classificação analítica por Logística, Comercial e Faturamento</p>
+            <span id="dev-chip-cidade" class="hidden mt-2 items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 ring-1 ring-amber-200">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i> <span id="dev-chip-cidade-nome"></span>
+                <button type="button" onclick="voltarDevolucoesPernambuco()" aria-label="Remover filtro de cidade" class="ml-1 text-amber-700 hover:text-amber-950"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+            </span>
+        </div>
+        <div class="flex items-center gap-2">
+            <input type="date" id="filtro-dev-ini" class="text-xs p-2 border border-slate-200 rounded-lg">
+            <span class="text-slate-400 text-xs">até</span>
+            <input type="date" id="filtro-dev-fim" class="text-xs p-2 border border-slate-200 rounded-lg">
+            <button onclick="carregarDevolucoesDetalhadas()" class="px-3.5 py-2 bg-[#141a4d] hover:bg-[#1b2168] text-white rounded-xl text-xs font-bold transition shadow-sm">
+                Filtrar
+            </button>
+        </div>
+    </div>
+
+    <!-- Mapa de devoluções por cidade (Pernambuco) ou a cidade escolhida no lugar do mapa -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col w-full" id="dev-mapa-bloco">
+        <div class="flex flex-wrap items-center justify-between mb-4 gap-3 border-b border-slate-100 pb-3">
+            <div class="flex flex-wrap items-center gap-3">
+                <h3 class="text-sm font-bold text-[#2A2C65] tracking-wider uppercase" id="dev-mapa-titulo">Mapa de Devolução por Cidade</h3>
+                <div class="flex bg-slate-100 p-1 rounded-lg" id="dev-mapa-metrica">
+                    <button type="button" data-grupo="mapa-metrica" data-valor="valor" onclick="alternarSegmentoDev(this)" class="px-3 py-1 text-xs font-bold rounded-md transition-all">Valor R$</button>
+                    <button type="button" data-grupo="mapa-metrica" data-valor="taxa" onclick="alternarSegmentoDev(this)" class="px-3 py-1 text-xs font-bold rounded-md transition-all">Taxa %</button>
+                </div>
+            </div>
+            <div class="flex bg-slate-100 p-1 rounded-lg" id="dev-mapa-visao">
+                <button type="button" data-grupo="mapa-visao" data-valor="PE" onclick="alternarSegmentoDev(this)" class="px-3 py-1 text-xs font-bold rounded-md transition-all">Pernambuco</button>
+                <button type="button" data-grupo="mapa-visao" data-valor="RMR" onclick="alternarSegmentoDev(this)" class="px-3 py-1 text-xs font-bold rounded-md transition-all">RMR</button>
+            </div>
+            <button type="button" id="dev-btn-voltar-pe" onclick="voltarDevolucoesPernambuco()" class="hidden items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 text-[#141a4d] hover:bg-slate-50 transition">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar para Pernambuco
+            </button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
+            <div class="relative w-full h-[350px] bg-slate-50 rounded-xl flex items-center justify-center overflow-hidden border border-slate-100" id="dev-mapa-svg">
+                <p class="text-sm text-slate-400">Carregando mapa de Pernambuco...</p>
+            </div>
+            <div class="flex flex-col h-[350px] min-h-0" id="dev-mapa-lateral"></div>
+        </div>
+        <div id="dev-mapa-tooltip" class="pointer-events-none fixed rounded-lg bg-white/95 px-3 py-2 text-xs shadow-md ring-1 ring-slate-200 hidden z-50">
+            <div class="font-semibold text-[#141a4d]" id="dev-tooltip-cidade"></div>
+            <div class="tabular-nums text-slate-600" id="dev-tooltip-dados"></div>
+            <div class="tabular-nums text-slate-400" id="dev-tooltip-extra"></div>
+        </div>
+    </div>
+
+    <!-- Detalhe da cidade escolhida no mapa: dias da semana, bairros e clientes -->
+    <div id="dev-cidade-graficos" class="hidden flex-col gap-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-3">
+                    <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase">Devolução (Valor R$) por dia</h3>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="dias-valor-base" data-valor="fat" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Dia Faturado</button>
+                            <button type="button" data-grupo="dias-valor-base" data-valor="mov" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Entrada Dev.</button>
+                        </div>
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="dias-valor-modo" data-valor="num" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Numérico</button>
+                            <button type="button" data-grupo="dias-valor-modo" data-valor="pct" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Porcentagem</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative h-[240px]"><canvas id="dev-cidade-chart-valor"></canvas></div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-3">
+                    <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase">Devolução (Peso kg) por dia</h3>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="dias-peso-base" data-valor="fat" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Dia Faturado</button>
+                            <button type="button" data-grupo="dias-peso-base" data-valor="mov" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Entrada Dev.</button>
+                        </div>
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="dias-peso-modo" data-valor="num" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Numérico</button>
+                            <button type="button" data-grupo="dias-peso-modo" data-valor="pct" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Porcentagem</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative h-[240px]"><canvas id="dev-cidade-chart-peso"></canvas></div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-3">
+                    <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase">Top 10 bairros com devolução</h3>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="bairros-metrica" data-valor="valor" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Valor</button>
+                            <button type="button" data-grupo="bairros-metrica" data-valor="peso" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Peso</button>
+                        </div>
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="bairros-base" data-valor="fat" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Dia Faturado</button>
+                            <button type="button" data-grupo="bairros-base" data-valor="mov" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Entrada Dev.</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="dev-cidade-chart-bairros"></canvas></div>
+                <p id="dev-cidade-bairros-vazio" class="hidden py-10 text-center text-sm text-slate-400">Sem devoluções por bairro neste período.</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-3">
+                    <h3 class="text-xs font-bold text-slate-500 tracking-wider uppercase">Top 10 clientes com maiores devoluções</h3>
+                    <div class="flex flex-wrap gap-2 text-[11px] font-bold">
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="clientes-metrica" data-valor="valor" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Valor</button>
+                            <button type="button" data-grupo="clientes-metrica" data-valor="peso" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Peso</button>
+                        </div>
+                        <div class="flex bg-slate-100 p-0.5 rounded-md">
+                            <button type="button" data-grupo="clientes-base" data-valor="fat" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Dia Faturado</button>
+                            <button type="button" data-grupo="clientes-base" data-valor="mov" onclick="alternarSegmentoDev(this)" class="px-2 py-1 rounded transition-all">Entrada Dev.</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="dev-cidade-chart-clientes"></canvas></div>
+                <p id="dev-cidade-clientes-vazio" class="hidden py-10 text-center text-sm text-slate-400">Sem devoluções de clientes neste período.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-red-500">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Valor Total Devolvido</span>
+            <div class="text-3xl font-black text-red-600 mt-1" id="kpi-dev-valor-total">R$ 0,00</div>
+            <div class="text-xs text-slate-400 mt-1">Soma líquida de todas as notas de devolução no período</div>
+        </div>
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total de Notas Fiscais Devolvidas</span>
+            <div class="text-3xl font-black text-slate-900 mt-1" id="kpi-dev-notas-total">0</div>
+            <div class="text-xs text-slate-400 mt-1">Entradas de devolução registradas</div>
+        </div>
+    </div>
+
+    <!-- Divisão por Setor Responsável -->
+    <div>
+        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Divisão por Setor Responsável</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="devolucoes-setores-barras">
+            <!-- Renderizado dinamicamente -->
+        </div>
+    </div>
+
+    <!-- Sub-tabs: Motivos / Clientes / Vendedores / Motoristas -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4" id="devolucoes-detalhes-container">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                <button id="btn-dev-tab-motivos" onclick="alternarAbaDevolucao('motivos')" class="tab-dev-btn px-3 py-1.5 rounded-lg bg-[#141a4d] text-white transition shadow-sm">Por Motivo</button>
+                <button id="btn-dev-tab-clientes" onclick="alternarAbaDevolucao('clientes')" class="tab-dev-btn px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Por Cliente</button>
+                <button id="btn-dev-tab-vendedores" onclick="alternarAbaDevolucao('vendedores')" class="tab-dev-btn px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Por Vendedor (RCA)</button>
+                <button id="btn-dev-tab-motoristas" onclick="alternarAbaDevolucao('motoristas')" class="tab-dev-btn px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Por Motorista (Taxa %)</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <select id="filtro-dev-setor" onchange="carregarDevolucoesDetalhadas()" class="text-xs p-2 border border-slate-200 rounded-lg bg-white">
+                    <option value="">Todos os Setores</option>
+                    <option value="Logística">Logística</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Faturamento">Faturamento</option>
+                </select>
+                <input type="text" id="filtro-dev-motivo" oninput="carregarDevolucoesDetalhadas()" placeholder="Filtrar por texto..." class="text-xs p-2 border border-slate-200 rounded-lg">
+            </div>
+        </div>
+
+        <div id="devolucoes-subtab-conteudo" class="overflow-x-auto">
+            <!-- Conteúdo da tabela de devolução renderizado via JS -->
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- ABA: DASHBOARD (VISÃO GERAL) -->
+<!-- ===================================================================== -->
+<div id="conteudo-dashboard" class="flex flex-col gap-6" style="display: none;">
+    <!-- Renderizado dinamicamente via plataforma_integrada.js -->
+</div>
+
+<!-- ===================================================================== -->
+<!-- TELA DE AUTENTICAÇÃO UNIFICADA (Centro de Controle Logística DIA) -->
+<!-- ===================================================================== -->
+<div id="tela-login-dia" class="fixed inset-0 z-[200] flex flex-col md:flex-row bg-[#071650] overflow-y-auto" style="display: none;">
+    <!-- Marca & Identidade DIA (Painel Escuro com Navy Gradient) -->
+    <section class="relative flex flex-col justify-between overflow-hidden px-8 py-10 md:w-[54%] md:px-14 md:py-14 text-white shrink-0" style="background: linear-gradient(160deg,#071650 0%,#0c1a5e 60%,#142372 100%); min-height: 420px;">
+        <!-- Brilho Dourado do Sol -->
+        <div class="pointer-events-none absolute -right-20 -top-20 h-[32rem] w-[32rem] rounded-full blur-[80px]" style="background: radial-gradient(circle, rgba(246,176,20,0.45) 0%, rgba(246,176,20,0) 65%);"></div>
+
+        <!-- Topo: Marca Oficial com Sol Animado -->
+        <div class="relative z-10 flex items-center gap-4">
+            <img src="sol-dia.gif" alt="Sol DIA" class="h-16 w-16 rounded-2xl object-cover shadow-2xl ring-1 ring-white/20"/>
+            <div class="leading-none">
+                <div class="text-3xl font-black tracking-tight text-white font-['Inter',sans-serif]">DIA</div>
+                <div class="mt-1.5 text-[11px] font-bold tracking-[0.35em] text-amber-300/80">DISTRIBUIÇÃO</div>
+            </div>
+        </div>
+
+        <!-- Meio: Título & Slogan -->
+        <div class="relative z-10 max-w-lg py-8 my-auto">
+            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-amber-300 ring-1 ring-white/10 mb-4">
+                <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                Centro de Controle Operacional
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-tight text-white">
+                A logística da<br /><span class="text-amber-400">DIA</span>, sob controle.
+            </h1>
+            <p class="mt-4 text-sm md:text-base leading-relaxed text-slate-300 max-w-md">
+                Efetivo, telemetria, pedidos a faturar, devoluções, cortes e custos da operação reunidos num só painel inteligente — do galpão à entrega.
+            </p>
+        </div>
+
+        <!-- Rodapé do painel de marca -->
+        <div class="relative z-10 text-xs text-slate-400 flex items-center justify-between">
+            <span>© 2026 Dia Distribuição · Versão Unificada</span>
+            <span class="hidden sm:inline-block"><i class="fa-solid fa-shield-halved text-amber-400 mr-1"></i> Acesso Seguro</span>
+        </div>
+    </section>
+
+    <!-- Painel de Login (Formulário Claro & Sofisticado) -->
+    <section class="flex flex-1 items-center justify-center bg-white px-8 py-12 md:px-14">
+        <div class="w-full max-w-md">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 ring-1 ring-amber-200">
+                    <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                    Acesso Restrito
+                </span>
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-black tracking-tight text-[#171c52]">
+                Bem-vindo de volta
+            </h2>
+            <p class="mt-1 text-xs md:text-sm text-slate-500">
+                Entre com seu e-mail corporativo ou usuário para acessar o painel.
+            </p>
+
+            <form id="form-login-dia" onsubmit="realizarLogin(event)" class="mt-6 space-y-4">
+                <div>
+                    <label for="login-identificador" class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+                        E-mail ou Usuário
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input
+                            id="login-identificador"
+                            type="text"
+                            required
+                            autocomplete="username"
+                            placeholder="seu.nome@diadistribuicao.com.br"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-300/50"
+                        />
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="login-senha" class="block text-xs font-bold uppercase tracking-wider text-slate-600">
+                            Senha de Acesso
+                        </label>
+                    </div>
+                    <div class="relative">
+                        <i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input
+                            id="login-senha"
+                            type="password"
+                            required
+                            autocomplete="current-password"
+                            placeholder="••••••••"
+                            class="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-12 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-amber-400 focus:bg-white focus:ring-2 focus:ring-amber-300/50"
+                        />
+                        <button
+                            type="button"
+                            onclick="toggleMostrarSenha()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400 hover:text-slate-600 px-1 py-0.5 cursor-pointer"
+                            id="btn-toggle-senha"
+                        >
+                            mostrar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mensagem de erro -->
+                <div id="login-erro-alerta" class="hidden rounded-xl bg-red-50 p-3 text-xs text-red-600 border border-red-200 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-red-500 text-sm shrink-0"></i>
+                    <span id="login-erro-texto">E-mail/usuário ou senha inválidos.</span>
+                </div>
+
+                <button
+                    type="submit"
+                    id="btn-login-submit"
+                    class="group flex w-full items-center justify-center gap-2 rounded-xl bg-[#141a4d] hover:bg-[#1f266c] py-3 text-sm font-bold text-white shadow-lg shadow-[#141a4d]/25 transition duration-200 cursor-pointer disabled:opacity-60"
+                >
+                    <span id="btn-login-label">Entrar no painel</span>
+                    <i id="btn-login-icon" class="fa-solid fa-arrow-right text-xs transition-transform group-hover:translate-x-1"></i>
+                </button>
+            </form>
+
+            <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Perfis: <strong class="text-slate-600 font-semibold">Admin</strong> ou <strong class="text-slate-600 font-semibold">Viewer</strong></span>
+                <span class="flex items-center gap-1"><i class="fa-solid fa-lock text-emerald-500"></i> Sessão Criptografada</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Modal: Itens do Pedido (Drill-Down 335) -->
+<div class="modal-overlay backdrop-blur-sm" id="modal-itens-pedido" style="display: none;">
+    <div class="bg-white p-6 rounded-2xl w-full max-w-2xl shadow-2xl border border-slate-200 relative max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+            <h3 class="text-base font-black text-[#141a4d] flex items-center gap-2" id="modal-itens-titulo">
+                <i class="fa-solid fa-boxes-stacked text-amber-500"></i> Itens do Pedido
+            </h3>
+            <button onclick="document.getElementById('modal-itens-pedido').style.display='none'" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+        </div>
+        <div id="modal-itens-conteudo" class="flex-1 overflow-y-auto">
+            <!-- Tabela dos itens -->
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+            <button onclick="document.getElementById('modal-itens-pedido').style.display='none'" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Visualizador DANFE Oficial -->
+<div class="modal-overlay backdrop-blur-sm" id="modal-danfe-viewer" style="display: none;">
+    <div class="bg-slate-100 p-6 rounded-2xl w-full max-w-4xl shadow-2xl border border-slate-300 relative max-h-[95vh] flex flex-col">
+        <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice text-emerald-600 text-xl"></i>
+                <h3 class="text-base font-black text-slate-800" id="danfe-numero-nf">DANFE - Documento Fiscal</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="imprimirDanfe()" class="px-3.5 py-1.5 bg-[#141a4d] hover:bg-[#1b2168] text-white text-xs font-bold rounded-lg transition shadow flex items-center gap-1.5">
+                    <i class="fa-solid fa-print"></i> Imprimir / Salvar PDF
+                </button>
+                <button onclick="document.getElementById('modal-danfe-viewer').style.display='none'" class="text-slate-400 hover:text-slate-600 text-2xl font-bold ml-2">&times;</button>
+            </div>
+        </div>
+        <div id="modal-danfe-corpo" class="flex-1 overflow-y-auto p-2">
+            <!-- DANFE impresso em HTML estruturado -->
+        </div>
+    </div>
+</div>
+
+<!-- Painel TV (Centro de Controle Logístico - Modo Operação) -->
+<div id="painel-tv-overlay" class="fixed inset-0 z-[100] flex flex-col overflow-hidden text-white" style="display: none; background: linear-gradient(140deg,#0a1650 0%,#0d1550 45%,#151b57 100%);">
+    <!-- Cabeçalho / Placar Superior -->
+    <header class="shrink-0 px-6 pt-5 pb-3 xl:px-10 xl:pt-6">
+        <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <img src="sol-dia.gif" alt="DIA" class="h-11 w-11 rounded-xl object-cover ring-1 ring-white/10" onerror="this.src='logo_dia.png'">
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight xl:text-3xl font-[sans-serif]">Painel da Operação</h1>
+                    <p class="flex flex-wrap items-center gap-x-2 text-sm text-white/50 mt-0.5">
+                        <button onclick="trocarMesTV(-1)" id="tv-btn-mes-prev" title="Mês anterior" class="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/70 ring-1 ring-white/15 hover:bg-white/15 transition cursor-pointer"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <span id="tv-mes-label" class="font-semibold text-white/90">Outubro 2026</span>
+                        <button onclick="trocarMesTV(1)" id="tv-btn-mes-next" title="Próximo mês" class="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/70 ring-1 ring-white/15 hover:bg-white/15 transition cursor-pointer"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                        <button onclick="voltarMesAtualTV()" id="tv-btn-mes-atual" title="Voltar ao mês atual" class="hidden rounded-full bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 px-2.5 py-0.5 text-xs font-bold transition cursor-pointer"><i class="fa-solid fa-rotate-left mr-1"></i>mês atual</button>
+                        <span>· filiais 1 e 11</span>
+                        <span>· atualizado <span id="tv-relogio" class="font-medium text-white/80">--:--</span></span>
+                        <span id="tv-badge-pausado" class="hidden rounded-full bg-amber-400/20 px-2 py-0.5 text-xs font-semibold text-amber-200">travado</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Botões de Controle -->
+            <div class="flex items-center gap-2">
+                <button onclick="trocarSlideTV(-1)" title="Slide anterior (←)" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/15 ring-1 ring-white/15 transition">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button onclick="togglePausarTV()" id="tv-btn-pause" title="Travar/Retomar nesta página (Espaço)" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/15 ring-1 ring-white/15 transition">
+                    <i class="fa-solid fa-pause" id="tv-ico-pause"></i>
+                </button>
+                <button onclick="trocarSlideTV(1)" title="Próximo slide (→)" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/15 ring-1 ring-white/15 transition">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button onclick="atualizarDadosTV(true)" title="Atualizar agora (atualiza automaticamente a cada 10 min)" class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white/80 hover:bg-white/15 ring-1 ring-white/15 transition">
+                    <i class="fa-solid fa-rotate-right" id="tv-ico-refresh"></i>
+                </button>
+                <button onclick="toggleFullscreenTV()" class="ml-1 rounded-xl bg-white/10 px-3.5 py-2 text-sm font-semibold text-white/80 ring-1 ring-white/15 transition hover:bg-white/15">
+                    Tela cheia
+                </button>
+                <button onclick="fecharModoTV()" class="rounded-xl bg-white/10 px-3.5 py-2 text-sm font-semibold text-rose-300 hover:text-white hover:bg-rose-600/60 ring-1 ring-white/15 transition">
+                    Sair
+                </button>
+            </div>
+        </div>
+
+        <!-- Placar Topo - 6 KPIs Persistentes -->
+        <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5" id="tv-placar-topo">
+            <div class="rounded-2xl bg-white/[0.06] px-4 py-3 ring-1 ring-white/10">
+                <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Clientes positivados</div>
+                <div id="tv-kpi-positivados" class="mt-1 text-2xl xl:text-3xl font-extrabold leading-none text-white tabular-nums">—</div>
+                <div class="mt-1 text-[11px] text-emerald-300 font-semibold">▲ carteira ativa</div>
+            </div>
+            <div class="rounded-2xl bg-white/[0.06] px-4 py-3 ring-1 ring-white/10">
+                <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Entregas realizadas</div>
+                <div id="tv-kpi-entregas" class="mt-1 text-2xl xl:text-3xl font-extrabold leading-none text-white tabular-nums">—</div>
+                <div class="mt-1 text-[11px] text-white/40">atendimentos concluídos</div>
+            </div>
+            <div class="rounded-2xl bg-white/[0.06] px-4 py-3 ring-1 ring-white/10">
+                <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Peso faturado</div>
+                <div id="tv-kpi-peso" class="mt-1 text-2xl xl:text-3xl font-extrabold leading-none text-white tabular-nums">—</div>
+                <div class="mt-1 text-[11px] text-white/40">toneladas expedidas</div>
+            </div>
+            <div class="rounded-2xl bg-white/[0.06] px-4 py-3 ring-1 ring-white/10">
+                <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Taxa de devolução</div>
+                <div id="tv-kpi-taxa-dev" class="mt-1 text-2xl xl:text-3xl font-extrabold leading-none text-rose-300 tabular-nums">—</div>
+                <div class="mt-1 text-[11px] text-rose-300/80 font-medium">valor devolvido ÷ faturado</div>
+            </div>
+            <div class="rounded-2xl bg-white/[0.06] px-4 py-3 ring-1 ring-white/10">
+                <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Carteira (a faturar)</div>
+                <div id="tv-kpi-carteira" class="mt-1 text-2xl xl:text-3xl font-extrabold leading-none text-amber-300 tabular-nums">—</div>
+                <div id="tv-kpi-carteira-hint" class="mt-1 text-[11px] text-amber-300/70 font-medium">pedidos a faturar</div>
+            </div>
+        </div>
+
+        <!-- SetorBar -->
+        <div class="mt-3" id="tv-setorbar-container">
+            <div class="flex h-2.5 overflow-hidden rounded-full bg-white/10" id="tv-setorbar-track">
+                <div id="tv-bar-logistica" style="width: 45%; background: #4b57c4;"></div>
+                <div id="tv-bar-comercial" style="width: 35%; background: #f5b301;"></div>
+                <div id="tv-bar-faturamento" style="width: 15%; background: #fb7185;"></div>
+                <div id="tv-bar-outros" style="width: 5%; background: #64748b;"></div>
+            </div>
+            <div class="mt-1.5 flex flex-wrap gap-x-5 gap-y-1 text-xs" id="tv-setorbar-chips">
+                <!-- Chips populados via JS -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Palco Rotativo -->
+    <main class="relative min-h-0 flex-1 px-6 pb-4 xl:px-10 xl:pb-6 flex flex-col">
+        <div class="flex h-full flex-col rounded-3xl bg-white/[0.04] p-5 xl:p-7 ring-1 ring-white/10 overflow-hidden relative">
+            
+            <!-- Slide 0: Devoluções · Mapa de Pernambuco -->
+            <div class="tv-slide h-full flex flex-col" data-slide-index="0">
+                <div class="mb-2 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-amber-300 text-lg"><i class="fa-solid fa-map-location-dot"></i></span>
+                        <div>
+                            <h2 class="text-xl xl:text-2xl font-extrabold tracking-tight text-white">Devoluções · Mapa de Pernambuco</h2>
+                            <p class="text-xs text-white/45">participação no faturamento e taxa de devolução por município</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-white/45">Taxa de devolução · PE</div>
+                            <div id="tv-mapa-pe-taxa-geral" class="text-2xl xl:text-3xl font-extrabold text-rose-300 tabular-nums">0,0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid min-h-0 flex-1 grid-cols-[1.4fr_1fr] xl:grid-cols-[1.5fr_1fr] gap-4 xl:gap-6 items-center">
+                    <!-- Mapa SVG PE -->
+                    <div class="flex flex-col justify-center h-full">
+                        <div class="relative flex items-center justify-center w-full min-h-[260px] max-h-[380px] xl:max-h-[420px]" id="tv-mapa-pe-container">
+                            <svg id="tv-mapa-pe-svg" viewBox="0 0 1000 341" class="h-auto w-full max-h-full drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]" role="img" aria-label="Mapa de devolução por cidade de Pernambuco">
+                                <!-- Preenchido dinamicamente com os paths do pe-municipios.json -->
+                            </svg>
+                            <!-- Tooltip Flutuante TV PE -->
+                            <div id="tv-mapa-pe-tooltip" class="pointer-events-none absolute left-3 top-3 rounded-xl bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 text-xs shadow-2xl ring-1 ring-white/20 hidden z-50 text-white min-w-[200px]">
+                                <div class="font-bold text-white text-sm" id="tv-tooltip-pe-cidade">Cidade</div>
+                                <div class="text-rose-300 font-bold tabular-nums mt-0.5" id="tv-tooltip-pe-dados">devolvido R$ 0,00 · taxa 0,0%</div>
+                                <div class="text-white/80 tabular-nums text-[11px]" id="tv-tooltip-pe-faturado">faturado R$ 0,00</div>
+                                <div class="text-white/60 text-[10px] mt-1 pt-1 border-t border-white/10" id="tv-tooltip-pe-extra">0 entregas / 0 devoluções</div>
+                            </div>
+                        </div>
+                        <!-- Legenda do Mapa -->
+                        <div class="mt-3 flex items-center gap-3 text-xs text-white/60 shrink-0">
+                            <span>Menor devolução</span>
+                            <div class="h-2 flex-1 rounded-full" style="background-image: linear-gradient(to right, #fde68a, #f59e0b, #dc2626);"></div>
+                            <span>Maior volume</span>
+                            <span class="ml-3 inline-flex items-center gap-1.5">
+                                <span class="inline-block h-2 w-3.5 rounded-sm bg-slate-600 border border-slate-500" style="background-color: #475569;"></span>
+                                sem devolução
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card Rotativo da Cidade / Sob o cursor -->
+                    <div class="flex flex-col justify-center h-full">
+                        <div id="tv-mapa-pe-card" class="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10 xl:p-6 transition-all">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <div id="tv-mapa-pe-card-contador" class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+                                    Cidade 1 de 20 · por volume
+                                </div>
+                                <div class="text-[11px] tabular-nums text-white/40">rotação cidade (4s)</div>
+                            </div>
+                            <div id="tv-mapa-pe-card-cidade" class="mt-1 truncate text-2xl xl:text-3xl font-extrabold text-white" title="Nome da Cidade">
+                                RECIFE
+                            </div>
+
+                            <div class="mt-4 space-y-3">
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Faturamento na Cidade</span>
+                                    <span id="tv-mapa-pe-card-faturado" class="text-lg xl:text-xl font-bold tabular-nums text-white monetary-blur">R$ 0,00</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Valor Devolvido</span>
+                                    <span id="tv-mapa-pe-card-devolvido" class="text-lg xl:text-xl font-extrabold tabular-nums text-rose-300 monetary-blur">R$ 0,00</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Taxa de Devolução</span>
+                                    <span id="tv-mapa-pe-card-taxa" class="text-xl xl:text-2xl font-extrabold tabular-nums text-rose-300">0,0%</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Notas Entregues / Devolvidas</span>
+                                    <span id="tv-mapa-pe-card-notas" class="text-base xl:text-lg font-bold tabular-nums text-white">0 / 0</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Do Faturamento Geral</span>
+                                    <span id="tv-mapa-pe-card-part" class="text-base xl:text-lg font-bold tabular-nums text-white/80">0,0%</span>
+                                </div>
+                                <div>
+                                    <div class="text-xs uppercase tracking-wide text-white/50">Motivo Predominante</div>
+                                    <div id="tv-mapa-pe-card-motivo" class="mt-0.5 truncate text-sm xl:text-base font-semibold text-amber-200" title="Motivo">Não informado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 1: Devoluções · Mapa da RMR por Bairro -->
+            <div class="tv-slide h-full flex flex-col hidden" data-slide-index="1">
+                <div class="mb-2 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-amber-300 text-lg"><i class="fa-solid fa-city"></i></span>
+                        <div>
+                            <h2 class="text-xl xl:text-2xl font-extrabold tracking-tight text-white">Devolução · Mapa da RMR por Bairro</h2>
+                            <p class="text-xs text-white/45">notas entregues / devolvidas e motivo predominante, bairro a bairro</p>
+                        </div>
+                    </div>
+                    <span class="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60 font-semibold">14 Municípios Metropolitanos</span>
+                </div>
+
+                <div class="grid min-h-0 flex-1 grid-cols-[1.3fr_1fr] gap-4 xl:gap-6 items-center">
+                    <!-- Mapa SVG RMR com zoom -->
+                    <div class="flex flex-col justify-center h-full">
+                        <div class="relative flex items-center justify-center w-full min-h-[260px] max-h-[380px] xl:max-h-[420px]" id="tv-mapa-rmr-container">
+                            <svg id="tv-mapa-rmr-svg" viewBox="900 60 100 120" class="h-auto w-full max-h-full drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]" role="img" aria-label="Mapa de devolução da Região Metropolitana do Recife">
+                                <!-- Preenchido dinamicamente com municípios da RMR -->
+                            </svg>
+                            <!-- Tooltip Flutuante TV RMR -->
+                            <div id="tv-mapa-rmr-tooltip" class="pointer-events-none absolute left-3 top-3 rounded-xl bg-slate-900/95 backdrop-blur-md px-3.5 py-2.5 text-xs shadow-2xl ring-1 ring-white/20 hidden z-50 text-white min-w-[200px]">
+                                <div class="font-bold text-white text-sm" id="tv-tooltip-rmr-cidade">Município</div>
+                                <div class="text-rose-300 font-bold tabular-nums mt-0.5" id="tv-tooltip-rmr-dados">devolvido R$ 0,00 · taxa 0,0%</div>
+                                <div class="text-white/80 tabular-nums text-[11px]" id="tv-tooltip-rmr-faturado">faturado R$ 0,00</div>
+                                <div class="text-white/60 text-[10px] mt-1 pt-1 border-t border-white/10" id="tv-tooltip-rmr-extra">0 entregas / 0 devoluções</div>
+                            </div>
+                        </div>
+                        <!-- Legenda -->
+                        <div class="mt-3 flex items-center gap-3 text-xs text-white/60 shrink-0">
+                            <span>Menor devolução</span>
+                            <div class="h-2 flex-1 rounded-full" style="background-image: linear-gradient(to right, #fde68a, #f59e0b, #dc2626);"></div>
+                            <span>Maior volume</span>
+                            <span class="ml-3 inline-flex items-center gap-1.5">
+                                <span class="inline-block h-2 w-3.5 rounded-sm bg-slate-600 border border-slate-500" style="background-color: #475569;"></span>
+                                sem devolução
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Card Rotativo de Bairros -->
+                    <div class="flex flex-col justify-center h-full">
+                        <div id="tv-mapa-rmr-card" class="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10 xl:p-6 transition-all">
+                            <div class="flex items-baseline justify-between gap-3">
+                                <div id="tv-mapa-rmr-card-contador" class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+                                    Bairro 1 de 20 · por devolução
+                                </div>
+                                <div class="text-[11px] tabular-nums text-white/40">rotação bairro (4s)</div>
+                            </div>
+                            <div id="tv-mapa-rmr-card-bairro" class="mt-1 truncate text-2xl xl:text-3xl font-extrabold text-white" title="Nome do Bairro">
+                                BOA VIAGEM
+                            </div>
+                            <div id="tv-mapa-rmr-card-cidade" class="text-xs text-white/50 font-semibold uppercase tracking-wider mt-0.5">
+                                RECIFE
+                            </div>
+
+                            <div class="mt-4 space-y-3">
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Faturamento no Bairro</span>
+                                    <span id="tv-mapa-rmr-card-faturado" class="text-lg xl:text-xl font-bold tabular-nums text-white monetary-blur">R$ 0,00</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Valor Devolvido</span>
+                                    <span id="tv-mapa-rmr-card-devolvido" class="text-lg xl:text-xl font-extrabold tabular-nums text-rose-300 monetary-blur">R$ 0,00</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Taxa de Devolução</span>
+                                    <span id="tv-mapa-rmr-card-taxa" class="text-xl xl:text-2xl font-extrabold tabular-nums text-rose-300">0,0%</span>
+                                </div>
+                                <div class="flex items-baseline justify-between gap-3 border-b border-white/10 pb-2.5">
+                                    <span class="text-xs uppercase tracking-wide text-white/50">Notas Faturadas / Devolvidas</span>
+                                    <span id="tv-mapa-rmr-card-notas" class="text-base xl:text-lg font-bold tabular-nums text-white">0 / 0</span>
+                                </div>
+                                <div>
+                                    <div class="text-xs uppercase tracking-wide text-white/50">Motivo Predominante</div>
+                                    <div id="tv-mapa-rmr-card-motivo" class="mt-0.5 truncate text-sm xl:text-base font-semibold text-amber-200" title="Motivo">Não informado</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Motoristas que Mais Voltam -->
+            <div class="tv-slide h-full flex flex-col hidden" data-slide-index="2">
+                <div class="mb-3 flex items-center justify-between shrink-0">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-amber-300 text-lg"><i class="fa-solid fa-truck"></i></span>
+                        <div>
+                            <h2 class="text-xl xl:text-2xl font-extrabold tracking-tight text-white">Motoristas que Mais Voltam</h2>
+                            <p class="text-xs text-white/45">classificação dos motoristas por índice e valor devolvido</p>
+                        </div>
+                    </div>
+                    <span class="rounded-full bg-white/10 px-3 py-1 text-xs text-white/60 font-semibold">Top 10 do Período</span>
+                </div>
+                <div class="min-h-0 flex-1 overflow-hidden" id="tv-motoristas-container">
+                    <div class="grid h-full grid-cols-1 gap-6 lg:grid-cols-2" id="tv-motoristas-duas-colunas">
+                        <!-- Coluna 1-5 e Coluna 6-10 preenchidas via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Devoluções · Setores & Motivos -->
+            <div class="tv-slide h-full flex flex-col hidden" data-slide-index="3">
+                <div class="mb-3 flex items-center gap-3 shrink-0">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-amber-300 text-lg"><i class="fa-solid fa-building"></i></span>
+                    <div>
+                        <h2 class="text-xl xl:text-2xl font-extrabold tracking-tight text-white">Devoluções · Setores & Motivos</h2>
+                        <p class="text-xs text-white/45">participação de cada setor e principais causas de retorno</p>
+                    </div>
+                </div>
+                <div class="grid min-h-0 flex-1 grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="flex flex-col min-h-0 lg:pr-6">
+                        <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
+                            <span class="h-3.5 w-1 rounded-full bg-amber-400"></span> Devoluções por Setor Responsável
+                        </div>
+                        <div class="flex-1 overflow-y-auto flex flex-col gap-3" id="tv-devolucoes-setores-cards">
+                            <!-- Cards de setor com progresso preenchidos via JS -->
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-h-0 border-t border-white/10 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                        <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
+                            <span class="h-3.5 w-1 rounded-full bg-amber-400"></span> Top Motivos Recorrentes
+                        </div>
+                        <div class="flex-1 overflow-y-auto divide-y divide-white/10" id="tv-devolucoes-motivos-ranking">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: A Faturar -->
+            <div class="tv-slide h-full flex flex-col hidden" data-slide-index="4">
+                <div class="mb-3 flex items-center gap-3 shrink-0">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-amber-300 text-lg"><i class="fa-solid fa-tag"></i></span>
+                    <div>
+                        <h2 class="text-xl xl:text-2xl font-extrabold tracking-tight text-white">A Faturar</h2>
+                        <p class="text-xs text-white/45">pedidos liberados / montados no armazém sem emissão de NF</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4 shrink-0">
+                    <div class="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10 flex items-center justify-between">
+                        <div>
+                            <div class="text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Total de Pedidos Retidos</div>
+                            <div id="tv-afaturar-pedidos" class="text-3xl font-extrabold text-amber-300 mt-1">0</div>
+                        </div>
+                        <i class="fa-solid fa-boxes-packing text-3xl text-amber-300/30"></i>
+                    </div>
+                    <div class="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10 flex items-center justify-between">
+                        <div>
+                            <div class="text-[0.7rem] font-semibold uppercase tracking-wider text-white/45">Volume & Peso Total da Carga</div>
+                            <div id="tv-afaturar-peso" class="text-3xl font-extrabold text-white mt-1">0 kg</div>
+                        </div>
+                        <i class="fa-solid fa-weight-hanging text-3xl text-white/20"></i>
+                    </div>
+                </div>
+                <div class="grid min-h-0 flex-1 grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div class="flex flex-col min-h-0">
+                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
+                            <span class="h-3.5 w-1 rounded-full bg-amber-400"></span> Cidades com Maior Demanda Pendente
+                        </div>
+                        <div class="flex-1 overflow-y-auto pr-2 divide-y divide-white/10" id="tv-afaturar-cidades">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                    <div class="flex flex-col min-h-0 border-t border-white/10 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                        <div class="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
+                            <span class="h-3.5 w-1 rounded-full bg-amber-400"></span> Pedidos Críticos com Maior Tempo Parado
+                        </div>
+                        <div class="flex-1 overflow-y-auto pr-2 divide-y divide-white/10" id="tv-afaturar-parados">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Indicador de Slide Inferior (Dots Clicáveis) -->
+        <div class="mt-3 flex items-center justify-center gap-2" id="tv-dots-container">
+            <button onclick="irParaSlideTV(0)" class="tv-dot h-1.5 rounded-full transition-all w-10 bg-amber-400" aria-label="Slide 1"></button>
+            <button onclick="irParaSlideTV(1)" class="tv-dot h-1.5 rounded-full transition-all w-4 bg-white/20 hover:bg-white/40" aria-label="Slide 2"></button>
+            <button onclick="irParaSlideTV(2)" class="tv-dot h-1.5 rounded-full transition-all w-4 bg-white/20 hover:bg-white/40" aria-label="Slide 3"></button>
+            <button onclick="irParaSlideTV(3)" class="tv-dot h-1.5 rounded-full transition-all w-4 bg-white/20 hover:bg-white/40" aria-label="Slide 4"></button>
+            <button onclick="irParaSlideTV(4)" class="tv-dot h-1.5 rounded-full transition-all w-4 bg-white/20 hover:bg-white/40" aria-label="Slide 5"></button>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/dashboard.js?v=202610281200"></script>
+<script src="js/plataforma_integrada.js?v=202610281000"></script>
+</body>
+</html>
+
