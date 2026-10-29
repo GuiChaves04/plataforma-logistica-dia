@@ -559,7 +559,7 @@
   </section>
 
   <!-- KPIs de Entregas e Faltas -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mt-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mt-4">
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-green-500">
           <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Entregas Realizadas</span>
           <div class="flex flex-col gap-1">
@@ -593,6 +593,13 @@
           <div class="flex flex-col gap-1">
               <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-combustivel">R$ 0,00</div>
               <div class="bg-orange-50 text-orange-600 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-pct-combustivel">0% do faturamento</div>
+          </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-rose-700" title="Diesel estimado + manutenção (desgaste). Manutenção: média de R$ 1.750 por caminhão por mês (faixa de R$ 1.500 a 2.000 informada pela oficina), rateada pelos dias do período.">
+          <span class="text-[11px] font-bold text-slate-500 tracking-wider mb-1 uppercase">Diesel + Desgaste</span>
+          <div class="flex flex-col gap-1">
+              <div class="text-xl xl:text-2xl font-extrabold text-[#2A2C65] tracking-tighter truncate" id="kpi-custo-frota">R$ 0,00</div>
+              <div class="bg-rose-50 text-rose-700 w-fit text-[10px] font-bold px-2 py-0.5 rounded-md" id="kpi-sub-custo-frota">0% do faturamento</div>
           </div>
       </div>
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col justify-between border-t-4 border-t-blue-500">
@@ -1674,7 +1681,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/dashboard.js?v=202610281200"></script>
+<script src="js/dashboard.js?v=202610291000"></script>
 <script src="js/plataforma_integrada.js?v=202610281000"></script>
 </body>
 </html>

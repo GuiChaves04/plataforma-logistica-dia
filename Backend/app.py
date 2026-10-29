@@ -377,8 +377,10 @@ def analise_motorista_dados():
         # Telemetria real do Siga+: KM vem das leituras de hodômetro guardadas pelo coletor (fulltrack.py).
         # Com filtro de motorista, só entram as placas dos carregamentos dele no período (WinThor).
         # Combustível: estimado por placa com o consumo médio do tipo de caminhão (frota_consumo.py) × preço do diesel.
+        # Manutenção (desgaste): custo mensal por caminhão (frota_consumo.py) rateado pelos dias de cada placa no período.
         telemetria = {"disponivel": False, "erro": None}
         combustivel = None
+        custo_frota = None
         try:
             if motorista.upper() != 'TODOS':
                 # Só os carros e os dias em que o motorista saiu com carregamento (outro motorista no mesmo carro não entra)
@@ -386,8 +388,13 @@ def analise_motorista_dados():
                 for linha in run_query(sql_queries.QUERY_PLACAS_MOTORISTA):
                     placa_dias.setdefault(fulltrack.normalizar_placa(linha['PLACA']), set()).add(linha['DIA'])
                 km = local_db.km_rodados_siga_dias(placa_dias)
+                veiculo_dias = sum(len(dias) for placa, dias in placa_dias.items() if placa in frota_consumo.FROTA)
             else:
                 km = local_db.km_rodados_siga(data_inicio, data_fim)
+                # Frota inteira, de data_inicio até data_fim (sem contar dias futuros)
+                fim = min(datetime.strptime(data_fim, '%Y-%m-%d'), datetime.today())
+                dias = max((fim - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1, 0)
+                veiculo_dias = len(frota_consumo.FROTA) * dias
             km = frota_consumo.so_caminhoes(km)
             telemetria.update({
                 "disponivel": bool(km['veiculos']),
@@ -401,6 +408,14 @@ def analise_motorista_dados():
             frota = [{"placa": v['placa'], "km": v['km']} for v in km['veiculos'][:20]]
             if km['veiculos']:
                 combustivel = frota_consumo.calcular_gasto_diesel(km['veiculos'])
+                manutencao = frota_consumo.calcular_manutencao(veiculo_dias)
+                custo_frota = {
+                    'diesel': combustivel['gasto_total'],
+                    'manutencao': manutencao,
+                    'total': round(combustivel['gasto_total'] + manutencao, 2),
+                    'veiculo_dias': veiculo_dias,
+                    'manutencao_mensal': frota_consumo.MANUTENCAO_MENSAL_VEICULO,
+                }
         except Exception as e:
             telemetria["erro"] = str(e)
             frota = []
@@ -425,6 +440,7 @@ def analise_motorista_dados():
             },
             'telemetria_siga': telemetria,
             'combustivel': combustivel,
+            'custo_frota': custo_frota,
             'frota_siga': frota,
             'motoristas': dados_motoristas,
             'cidades': dados_cidades,

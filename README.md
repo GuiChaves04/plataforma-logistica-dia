@@ -22,9 +22,11 @@ Feita para o time de logística acompanhar a operação no dia a dia, no computa
 
 - **Clientes positivados:** clientes com venda maior que zero no período, na base de faturamento do WinThor (`VIEW_BI_FATURAMENTO`, filiais 1 e 11). É a mesma regra da rotina 111.
 - **Produto obsoleto:** tem estoque, está há mais de 45 dias sem venda e a última entrada (rotina 1130) foi há pelo menos 30 dias.
+- **Valor das devoluções:** valor devolvido menos IPI e ST, pela `VIEW_DEVOL_RESUMO_FATURAMENTO`, a mesma base da rotina 111. A aba Devoluções e o card da Visão Geral mostram o mesmo total.
 - **Devoluções por motorista:** cada devolução que entra no período é atribuída ao motorista que entregou a nota de venda original, mesmo quando a venda é anterior ao período. Assim o total bate com a visão por motivo.
 - **Km rodado:** maior hodômetro menos o menor, por caminhão e por dia, com histórico do Siga+ baixado em janelas de 15 dias. Rastreadores sem hodômetro usam a distância calculada pelo GPS.
 - **Gasto com diesel:** km rodado dividido pelo consumo médio do modelo (km/L) e multiplicado pelo preço do litro, configurado em `Backend/frota_consumo.py`.
+- **Diesel + desgaste:** gasto com diesel mais a manutenção, de R$ 1.750 por caminhão por mês (meio da faixa de R$ 1.500 a 2.000 informada pela oficina), rateada pelos dias de cada placa no período. O valor fica em `MANUTENCAO_MENSAL_VEICULO`, no mesmo arquivo.
 
 ## Tecnologias
 

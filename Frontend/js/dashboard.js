@@ -368,7 +368,7 @@ const KPIS_EXCESSO = ['kpi-estoque-pago', 'kpi-contas-pagar', 'kpi-perda-venda',
     'kpi-skus-zerados', 'kpi-fator-margem', 'kpi-indice-ruptura-valor', 'kpi-indice-ruptura-qtd', 'kpi-indice-45d', 'kpi-oportunidade-compra', 'kpi-itens-estoque'];
 const KPIS_COMERCIAL = ['kpi-com-fat-total', 'kpi-com-fat-comp', 'kpi-com-fat-sup', 'kpi-com-perc-total', 'kpi-com-perc-comp',
     'kpi-com-mais-vendido', 'kpi-com-menos-vendido', 'kpi-com-mais-rentavel', 'kpi-com-mais-positivou', 'kpi-com-consistente'];
-const KPIS_TELEMETRIA = ['kpi-entregas-qtd', 'kpi-qtd-devolucoes', 'kpi-clientes-atendidos', 'kpi-clientes-devolveram', 'kpi-combustivel', 'kpi-km-rodados'];
+const KPIS_TELEMETRIA = ['kpi-entregas-qtd', 'kpi-qtd-devolucoes', 'kpi-clientes-atendidos', 'kpi-clientes-devolveram', 'kpi-combustivel', 'kpi-custo-frota', 'kpi-km-rodados'];
 const COMPARATIVO_CORTES = ['ant', 'atu', 'res'].flatMap(p => ['fat', 'venda', 'custo', 'perc', 'skus', 'vol'].map(c => `comp-${p}-${c}`));
 
 async function carregarDadosCortes(inicio, fim, area) {
@@ -1598,12 +1598,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Diesel estimado: km de cada placa no Siga+ ÷ consumo médio do tipo de caminhão × preço do litro
                     const comb = data.combustivel;
+                    // Reais sem centavos nos cards de custo, para caber com 7 cards na linha (centavos ficam no tooltip)
+                    const brlInteiro = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
                     const kpiGasto = document.getElementById('kpi-combustivel');
                     const kpiPctCombustivel = document.getElementById('kpi-pct-combustivel');
                     if (comb && comb.gasto_total > 0) {
                         if (kpiGasto) {
-                            kpiGasto.innerText = formatarBRL(comb.gasto_total);
-                            kpiGasto.title = comb.por_tipo.map(t => `${t.tipo}: ${formatarBRL(t.gasto)} · ${Math.round(t.km).toLocaleString('pt-BR')} km · ${Math.round(t.litros).toLocaleString('pt-BR')} L`).join('\n')
+                            kpiGasto.innerText = brlInteiro(comb.gasto_total);
+                            kpiGasto.title = `Total: ${formatarBRL(comb.gasto_total)}\n` + comb.por_tipo.map(t => `${t.tipo}: ${formatarBRL(t.gasto)} · ${Math.round(t.km).toLocaleString('pt-BR')} km · ${Math.round(t.litros).toLocaleString('pt-BR')} L`).join('\n')
                                 + (comb.placas_sem_tipo.length ? `\n${comb.placas_sem_tipo.length} placa(s) fora da planilha não entram na conta` : '');
                         }
                         const fatLiq = Number(data.kpis.faturamento_liquido || 0);
@@ -1613,6 +1615,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         if (kpiGasto) kpiGasto.innerText = '—';
                         if (kpiPctCombustivel) kpiPctCombustivel.innerText = 'Sem km do Siga+ no período';
+                    }
+
+                    // Diesel + desgaste: manutenção mensal por caminhão rateada pelos dias de cada placa no período
+                    const custo = data.custo_frota;
+                    const kpiCusto = document.getElementById('kpi-custo-frota');
+                    const kpiSubCusto = document.getElementById('kpi-sub-custo-frota');
+                    if (custo && custo.total > 0) {
+                        if (kpiCusto) {
+                            kpiCusto.innerText = brlInteiro(custo.total);
+                            kpiCusto.title = `Total: ${formatarBRL(custo.total)}\nDiesel: ${formatarBRL(custo.diesel)}\nDesgaste (manutenção): ${formatarBRL(custo.manutencao)}`
+                                + `\n${custo.veiculo_dias.toLocaleString('pt-BR')} caminhão-dias × ${formatarBRL(custo.manutencao_mensal)}/mês ÷ 30`;
+                        }
+                        const fatLiq = Number(data.kpis.faturamento_liquido || 0);
+                        if (kpiSubCusto) kpiSubCusto.innerText = fatLiq > 0
+                            ? `${(custo.total / fatLiq * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}% do faturamento`
+                            : `Desgaste ${formatarBRL(custo.manutencao)}`;
+                    } else {
+                        if (kpiCusto) kpiCusto.innerText = '—';
+                        if (kpiSubCusto) kpiSubCusto.innerText = 'Sem km do Siga+ no período';
                     }
 
                     const kpiKm = document.getElementById('kpi-km-rodados');

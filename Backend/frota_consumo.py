@@ -5,6 +5,10 @@
 
 PRECO_DIESEL_LITRO = 7.05
 
+# Desgaste (manutenção): a oficina informou de R$ 1.500 a R$ 2.000 por caminhão por mês; usa o meio da faixa.
+# Rateado por dia (mês = 30 dias) para qualquer período filtrado.
+MANUTENCAO_MENSAL_VEICULO = 1750.0
+
 # km/L por modelo. Fontes: computador de bordo (MAX Turbos) para Delivery 9.170 e 11.180,
 # faixas de guias de frota para toco (3,5 a 5,0) e truck 6x2, ficha técnica para Kia Bongo K2500.
 CONSUMO_KM_L = {
@@ -56,6 +60,11 @@ def so_caminhoes(km):
     """
     veiculos = [v for v in km['veiculos'] if v['placa'] in FROTA]
     return {**km, 'veiculos': veiculos, 'km_total': round(sum(v['km'] for v in veiculos), 1)}
+
+
+def calcular_manutencao(veiculo_dias):
+    """veiculo_dias: soma, placa a placa, dos dias do período em que o caminhão conta (só placas da FROTA)."""
+    return round(veiculo_dias * MANUTENCAO_MENSAL_VEICULO / 30, 2)
 
 
 def calcular_gasto_diesel(veiculos):
